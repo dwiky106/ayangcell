@@ -67,17 +67,33 @@ select {
     border: 1px solid #ccc;
     border-radius: 4px;
     font-size: 1em;
-    appearance: none; /* Menghilangkan styling default pada select */
+    appearance: none; 
     background-color: #fff;
+    transition: border-color 0.3s;
 }
 
-/* Styling Dropdown/Select yang lebih menarik */
+input[type="text"]:focus,
+input[type="number"]:focus,
+select:focus {
+    border-color: var(--secondary-color);
+    outline: none;
+}
+
+/* Styling Dropdown Dasar */
 select {
     background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23000000%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-4.9%200-9.6%202.1-13%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%202.1%209.7%205.4%2013l129.4%20129.5c3.4%203.4%208.1%205.5%2013%205.5s9.6-2.1%2013-5.5L287%2095.2c3.4-3.4%205.4-8.1%205.4-13%200-4.9-2.1-9.6-5.4-13z%22%2F%3E%3C%2Fsvg%3E");
     background-repeat: no-repeat, repeat;
     background-position: right .7em top 50%, 0 0;
     background-size: .65em auto, 100%;
-    padding-right: 25px; /* Tambahan padding agar panah tidak menutupi teks */
+    padding-right: 25px; 
+}
+
+/* --- Styling Dropdown Warna-warni (BARU) --- */
+.colorful-dropdown {
+    background-color: #e8f0fe; /* Background biru muda */
+    border: 2px solid var(--primary-color);
+    color: #000;
+    font-weight: 500;
 }
 
 /* Tombol Input */
@@ -95,7 +111,7 @@ select {
 }
 
 #inputButton:hover {
-    background-color: #303f9f; /* Warna sedikit lebih gelap saat hover */
+    background-color: #303f9f;
 }
 
 #inputButton:disabled {
@@ -122,17 +138,23 @@ select {
     color: #155724;
     border: 1px solid #c3e6cb;
 }
-
 .status-message.error {
     background-color: #f8d7da;
     color: #721c24;
     border: 1px solid #f5c6cb;
 }
-
 .status-message.loading {
     background-color: #fff3cd;
     color: #856404;
     border: 1px solid #ffeeba;
 }
 
-
+/* Styling Catatan Kaki */
+.system-footer-inside-form {
+    text-align: center;
+    margin-top: 20px;
+    padding-top: 10px;
+    font-size: 0.85em;
+    color: #a0a0a0; 
+    border-top: 1px solid #f0f0f0; 
+}
