@@ -1,160 +1,158 @@
-/* Styling Dasar dan Responsif */
-:root {
-    --primary-color: #3f51b5; /* Biru Indigo */
-    --secondary-color: #ffc107; /* Kuning Amber */
-    --background-color: #f4f4f9;
-    --text-color: #333;
-    --border-radius: 8px;
-    --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-}
-
+/* Palet Warna: Deep Blue Elegance */
 body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
-    background-color: var(--background-color);
-    color: var(--text-color);
-    line-height: 1.6;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f0f4f7; 
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
     padding: 20px;
 }
 
 .container {
+    background-color: #ffffff;
+    padding: 35px;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0, 77, 153, 0.1); 
+    width: 100%;
     max-width: 500px;
-    margin: 40px auto;
-    padding: 30px;
-    background: #ffffff;
-    border-radius: var(--border-radius);
-    box-shadow: var(--shadow);
 }
 
-/* Header */
-h1 {
-    color: var(--primary-color);
-    text-align: center;
-    margin-bottom: 10px;
-    font-size: 1.8em;
-}
-
-p {
+header {
     text-align: center;
     margin-bottom: 30px;
-    color: #666;
 }
 
-/* Formulir Elements */
-form {
-    display: flex;
-    flex-direction: column;
+h1 {
+    color: #004d99; 
+    font-size: 2em;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+/* --- Pengaturan Formulir --- */
+
+.form-group {
+    margin-bottom: 20px;
 }
 
 label {
-    margin-bottom: 5px;
-    font-weight: bold;
-    color: var(--primary-color);
-    margin-top: 15px;
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #333333;
+    font-size: 0.95em;
 }
 
 input[type="text"],
-input[type="number"],
 select {
     width: 100%;
-    padding: 12px;
-    margin-bottom: 10px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
+    padding: 12px 15px;
+    border: 1px solid #cceeff;
+    border-radius: 8px; 
+    box-sizing: border-box; 
     font-size: 1em;
+    color: #333;
+    background-color: #ffffff;
+    /* Menyembunyikan ikon default browser di select */
     appearance: none; 
-    background-color: #fff;
-    transition: border-color 0.3s;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 input[type="text"]:focus,
-input[type="number"]:focus,
 select:focus {
-    border-color: var(--secondary-color);
+    border-color: #007bff; 
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.2); 
     outline: none;
 }
 
-/* Styling Dropdown Dasar */
+small {
+    display: block;
+    margin-top: 4px;
+    color: #6c757d;
+    font-size: 0.8em;
+}
+
+/* --- Tampilan Dropdown Select yang Ditingkatkan (Elegance) --- */
 select {
-    background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23000000%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-4.9%200-9.6%202.1-13%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%202.1%209.7%205.4%2013l129.4%20129.5c3.4%203.4%208.1%205.5%2013%205.5s9.6-2.1%2013-5.5L287%2095.2c3.4-3.4%205.4-8.1%205.4-13%200-4.9-2.1-9.6-5.4-13z%22%2F%3E%3C%2Fsvg%3E");
-    background-repeat: no-repeat, repeat;
-    background-position: right .7em top 50%, 0 0;
-    background-size: .65em auto, 100%;
-    padding-right: 25px; 
+    /* Menambahkan ikon panah kustom menggunakan SVG data URL */
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23004d99' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 15px center; /* Posisi ikon */
+    background-size: 12px 12px; /* Ukuran ikon */
+    padding-right: 40px; /* Tambahkan padding agar teks tidak menimpa ikon */
+    cursor: pointer;
 }
 
-/* --- Styling Dropdown Warna-warni (BARU) --- */
-.colorful-dropdown {
-    background-color: #e8f0fe; /* Background biru muda */
-    border: 2px solid var(--primary-color);
-    color: #000;
-    font-weight: 500;
+/* Mengubah warna opsi saat pertama kali dipilih (optional, tergantung browser) */
+select option:checked {
+    background-color: #e6f0ff; 
+    color: #004d99;
 }
 
-/* Tombol Input */
-#inputButton {
-    background-color: var(--primary-color);
+/* --- Tombol Submit --- */
+
+button {
+    background-color: #004d99; 
     color: white;
-    padding: 15px;
-    margin-top: 25px;
+    padding: 14px 20px;
     border: none;
-    border-radius: var(--border-radius);
+    border-radius: 8px;
     cursor: pointer;
     font-size: 1.1em;
-    font-weight: bold;
-    transition: background-color 0.3s ease;
-}
-
-#inputButton:hover {
-    background-color: #303f9f;
-}
-
-#inputButton:disabled {
-    background-color: #999;
-    cursor: not-allowed;
-}
-
-/* Kelas untuk elemen yang tersembunyi */
-.hidden {
-    display: none !important;
-}
-
-/* Status Pesan */
-.status-message {
-    text-align: center;
-    padding: 10px;
-    margin-top: 15px;
-    border-radius: 4px;
-    font-weight: bold;
-}
-
-.status-message.success {
-    background-color: #d4edda;
-    color: #155724;
-    border: 1px solid #c3e6cb;
-}
-.status-message.error {
-    background-color: #f8d7da;
-    color: #721c24;
-    border: 1px solid #f5c6cb;
-}
-.status-message.loading {
-    background-color: #fff3cd;
-    color: #856404;
-    border: 1px solid #ffeeba;
-}
-
-/* Styling Catatan Kaki */
-.system-footer-inside-form {
-    text-align: center;
+    font-weight: 600;
+    width: 100%;
     margin-top: 20px;
-    padding-top: 10px;
-    font-size: 0.85em;
-    color: #a0a0a0; 
-    border-top: 1px solid #f0f0f0; 
+    transition: background-color 0.3s ease, transform 0.1s ease;
+}
+
+button:hover:not(:disabled) {
+    background-color: #007bff; 
+    transform: translateY(-1px); 
+}
+
+button:disabled {
+    background-color: #99c2ff; 
+    cursor: wait;
+}
+
+.hidden {
+    display: none;
+}
+
+/* --- Notifikasi (Elegance) --- */
+#message {
+    text-align: center;
+    margin-top: 25px;
+    padding: 15px;
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: 0.95em;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); 
+}
+
+.success {
+    background-color: #e6ffed; 
+    color: #006622; 
+    border: 1px solid #b3ffc6;
+}
+
+.error {
+    background-color: #ffe6e6; 
+    color: #cc0000; 
+    border: 1px solid #ffb3b3;
+}
+
+/* Responsiveness */
+@media (max-width: 600px) {
+    .container {
+        padding: 25px;
+        margin: 10px;
+    }
+    h1 {
+        font-size: 1.8em;
+    }
 }
