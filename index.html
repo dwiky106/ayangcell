@@ -3,80 +3,97 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Anggun Celluler - Pencatatan Keuangan</title>
+    <title>database-transaction-anggun-cell</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
-        <h1>Anggun Celluler 📱</h1>
-        <p>Formulir Pencatatan Transaksi</p>
-        <form id="financeForm">
+        <header>
+            <h1 id="greeting">Loading...</h1> 
+        </header>
 
-            <label for="jenisTransaksi">Jenis Transaksi</label>
-            <select id="jenisTransaksi" name="jenisTransaksi" required>
-                <option value="" disabled selected>Pilih Jenis Transaksi</option>
-                <option value="Tarik Tunai">Tarik Tunai</option>
-                <option value="Transfer">Transfer</option>
-                <option value="TOP UP E-Wallet">TOP UP E-Wallet</option>
-                <option value="Pulsa">Pulsa</option>
-                <option value="Token Listruk">Token Listruk</option>
-                <option value="Tagihan Listrik">Tagihan Listrik</option>
-                <option value="Lainnya">Lainnya</option>
-            </select>
+        <div style="text-align: center; margin-bottom: 25px;">
+            <a href="summary.html" style="color: #007bff; text-decoration: none; font-weight: 600;">Lihat Dashboard Ringkasan →</a>
+        </div>
 
-            <div id="jalurGroup" class="hidden">
-                <label for="jalurTransaksi">Jalur Transaksi</label>
-                <select id="jalurTransaksi" name="jalurTransaksi" class="colorful-dropdown">
-                    <option value="" disabled selected>Pilih Jalur</option>
+        <form id="transactionForm" 
+              action="https://script.google.com/macros/s/AKfycbxeS-KiCwl4nhEXAHabQZ_gop7NCRbHeilNMixZW7fKP8hTxKR6Nz3rMKKsyMDsHqsh/exec" 
+              method="POST" 
+              target="hiddenIframe">
+
+            <div class="form-group">
+                <label for="channel">Channel Transaksi:</label>
+                <select id="channel" name="Channel Transaksi" required>
+                    <option value="" disabled selected>Pilih Channel</option>
+                    <option value="Flip">Flip</option>
                     <option value="EDC">EDC</option>
+                    <option value="Gopay">Gopay</option>
+                    <option value="Buku Agen">Buku Agen</option>
+                    <option value="PosPay">PosPay</option>
                     <option value="QRIS">QRIS</option>
                 </select>
             </div>
 
-            <div id="eWalletGroup" class="hidden">
-                <label for="jenisEwallet">Jenis E-Wallet</label>
-                <select id="jenisEwallet" name="jenisEwallet" class="colorful-dropdown">
-                    <option value="" disabled selected>Pilih E-Wallet</option>
-                    <option value="Dana">Dana</option>
-                    <option value="Shopepay">ShopeePay</option>
-                    <option value="Gopay">GoPay</option>
-                    <option value="OVO">OVO</option>
-                    <option value="Link Aja">Link Aja</option>
+            <div class="form-group">
+                <label for="transactionType">Jenis Transaksi:</label>
+                <select id="transactionType" name="Jenis Transaksi" required>
+                    <option value="" disabled selected>Pilih Jenis Transaksi</option>
+                    <option value="Tarik Tunai">Tarik Tunai</option>
+                    <option value="Transfer">Transfer</option>
+                    <option value="Top Up E-Wallet">Top Up E-Wallet</option>
+                    <option value="Pulsa">Pulsa</option>
+                    <option value="Token Listrik">Token Listrik</option>
+                    <option value="Tagihan Listrik">Tagihan Listrik</option>
+                    <option value="Lainnya">Lainnya</option>
                 </select>
             </div>
 
-            <label for="modalTransaksi">Modal Transaksi (Rp)</label>
-            <input type="number" id="modalTransaksi" name="modalTransaksi" min="0" required placeholder="Masukkan nominal modal">
-
-            <label for="jumlahTransaksi">Jumlah Transaksi (Rp)</label>
-            <input type="number" id="jumlahTransaksi" name="jumlahTransaksi" min="0" required placeholder="Contoh: 100000">
-
-            <label for="jumlahDiterimaAgen">Jumlah Diterima Agen (Rp)</label>
-            <input type="number" id="jumlahDiterimaAgen" name="jumlahDiterimaAgen" min="0" required placeholder="Contoh: 105000">
-
-            <label for="nomorCustomer">Nomor Rekening / No. HP / Nama Customer</label>
-            <input type="text" id="nomorCustomer" name="nomorCustomer" required placeholder="Cth: 0812xxxxxx / Bpk. Adi">
-
-            <label for="statusPembayaran">Status Pembayaran</label>
-            <select id="statusPembayaran" name="statusPembayaran" required>
-                <option value="Lunas">Lunas</option>
-                <option value="Terhutang">Terhutang</option>
-            </select>
-            
-            <div id="terhutangGroup" class="hidden">
-                <label for="nominalTerhutang">Nominal Terhutang (Rp)</label>
-                <input type="number" id="nominalTerhutang" name="nominalTerhutang" min="0" placeholder="Masukkan jumlah yang terhutang">
+            <div class="form-group hidden" id="otherTransactionGroup">
+                <label for="otherTransaction">Sebutkan Jenis Transaksi:</label>
+                <input type="text" id="otherTransaction" name="Detail Transaksi Lain" placeholder="Contoh: Pembayaran PDAM">
             </div>
 
-            <button type="submit" id="inputButton">INPUT DATA</button>
-            <div id="statusMessage" class="status-message"></div>
+            <div class="form-group">
+                <label for="priceChannel">Harga Channel (Nominal Transaksi):</label>
+                <input type="text" id="priceChannel" name="Harga Channel" placeholder="Contoh: 100000" inputmode="numeric" required>
+                <small>Masukkan nominal tanpa titik atau koma (misalnya 100000)</small>
+            </div>
 
-            <div class="system-footer-inside-form">
-                system by : PT Dwi Karya Inovasi Teknologi
+            <div class="form-group">
+                <label for="receivedAmount">Jumlah Diterima Agen:</label>
+                <input type="text" id="receivedAmount" name="Jumlah Diterima Agen" placeholder="Contoh: 102000" inputmode="numeric" required>
+                <small>Masukkan nominal tanpa titik atau koma (misalnya 102000)</small>
+            </div>
+
+            <div class="form-group">
+                <label for="customerInfo">Nomor Rekening/No Hp/Nama Customer:</label>
+                <input type="text" id="customerInfo" name="Info Customer" required>
+            </div>
+
+            <div class="form-group">
+                <label for="paymentStatus">Status Pembayaran:</label>
+                <select id="paymentStatus" name="Status Pembayaran" required>
+                    <option value="" disabled selected>Pilih Status</option>
+                    <option value="Lunas">Lunas</option>
+                    <option value="Terhutang">Terhutang</option>
+                </select>
+            </div>
+
+            <div class="form-group hidden" id="debtAmountGroup">
+                <label for="debtAmount">Jumlah Terhutang:</label>
+                <input type="text" id="debtAmount" name="Jumlah Terhutang" placeholder="Masukkan nominal terhutang" inputmode="numeric">
+                <small>Masukkan nominal tanpa titik atau koma</small>
             </div>
             
+            <button type="submit" id="submitBtn">Input Data</button>
+
+            <p id="message" class="hidden"></p>
+
+            <input type="hidden" name="callback" value="handleResponse">
         </form>
     </div>
+
+    <iframe name="hiddenIframe" id="hiddenIframe" style="display:none;"></iframe>
 
     <script src="script.js"></script>
 </body>
