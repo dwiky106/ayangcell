@@ -3,98 +3,674 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Transaksi Anggun Cell</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Dashboard Transaksi Agen</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Konfigurasi Font Inter -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f9fb;
+        }
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        .form-label {
+            display: block;
+            font-size: 0.875rem; /* sm */
+            font-weight: 600;
+            color: #4f46e5; /* indigo-600 */
+            margin-bottom: 0.5rem;
+        }
+        .form-input, .form-select {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            border: 1px solid #d1d5db;
+            background-color: white;
+            transition: all 0.2s;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        }
+        .form-input:focus, .form-select:focus {
+            border-color: #6366f1; /* indigo-500 */
+            outline: 2px solid #818cf8; /* indigo-400 ring */
+            box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.5);
+        }
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 4px solid white;
+            width: 1rem;
+            height: 1rem;
+            -webkit-animation: spin 1s linear infinite;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 0.5rem;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .channel-btn {
+            background-color: #fff;
+            color: #4f46e5;
+            border: 2px solid #a5b4fc; /* indigo-300 */
+            transition: all 0.2s;
+        }
+        .channel-btn:hover {
+            background-color: #eef2ff; /* indigo-50 */
+            border-color: #6366f1;
+            transform: translateY(-1px);
+        }
+        .channel-btn.active {
+            background-color: #6366f1;
+            color: white;
+            border-color: #4f46e5;
+            box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.5), 0 2px 4px -2px rgba(99, 102, 241, 0.5);
+        }
+        /* Modal styling */
+        .modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            z-index: 50;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+    </style>
 </head>
-<body>
-    <div class="container">
-        <header>
-            <h1 id="greeting">Loading...</h1> 
-        </header>
+<body class="p-4 sm:p-8">
 
-        <div style="text-align: center; margin-bottom: 25px;">
-            <a href="summary.html" style="color: #007bff; text-decoration: none; font-weight: 600;">Lihat Dashboard Ringkasan →</a>
+    <div class="max-w-4xl mx-auto bg-white p-6 sm:p-10 rounded-3xl shadow-2xl">
+        
+        <!-- HEADER -->
+        <h1 id="greeting" class="text-3xl font-bold mb-2 text-indigo-700">Selamat [Waktu] 👋</h1>
+        <p class="text-gray-500 mb-8">Pilih Channel Transaksi atau Lihat Ringkasan Harian.</p>
+
+        <!-- CHANNEL SELECTION & SUMMARY BUTTONS -->
+        <div class="flex flex-wrap gap-4 mb-10 border-b pb-6">
+            <button data-channel="Flip" class="channel-btn px-6 py-3 rounded-xl font-semibold shadow-md">Flip</button>
+            <button data-channel="Gopay" class="channel-btn px-6 py-3 rounded-xl font-semibold shadow-md">Gopay</button>
+            <button data-channel="Buku Agen" class="channel-btn px-6 py-3 rounded-xl font-semibold shadow-md">Buku Agen</button>
+            <button data-channel="QRIS" class="channel-btn px-6 py-3 rounded-xl font-semibold shadow-md">QRIS</button>
+            <button id="summary-btn" class="px-6 py-3 rounded-xl font-semibold bg-green-600 text-white shadow-lg hover:bg-green-700 transition duration-150 ml-auto">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline mr-2" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M3 3a1 1 0 000 2v10a1 1 0 000 2h14a1 1 0 000-2V5a1 1 0 000-2H3zm1 3v7h12V6H4zm1 1h2v1H5V7zm3 0h4v1H8V7zm5 0h2v1h-2V7z" clip-rule="evenodd" />
+                </svg>
+                Lihat Ringkasan
+            </button>
         </div>
 
-        <form id="transactionForm" 
-              action="https://script.google.com/macros/s/AKfycbyPy1wa4fnVgT7DbWa6nyhRLb_MO2gucfRHe438kJu8kWVaFlBLqjwAFfFemy3FDNtR/exec" 
-              method="POST" 
-              target="hiddenIframe">
+        <!-- TRANSACTION FORM VIEW -->
+        <div id="form-container" class="hidden">
+            <h2 class="text-2xl font-bold mb-6 text-indigo-800 border-b pb-3">
+                Input Transaksi: <span id="form-title-span">Channel</span>
+            </h2>
+            <form id="transaction-form">
+                <!-- Grid 2 Kolom untuk field dinamis -->
+                <div id="dynamic-fields" class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                    <!-- Field akan di-inject di sini oleh JavaScript -->
+                </div>
+                
+                <div class="mt-8 pt-6 border-t flex justify-end">
+                    <button type="submit" id="submit-btn" class="px-8 py-3 bg-indigo-600 text-white font-bold rounded-xl shadow-lg hover:bg-indigo-700 transition duration-150">
+                        Kirim Data
+                    </button>
+                </div>
+            </form>
+        </div>
 
-            <div class="form-group">
-                <label for="channel">Channel Transaksi:</label>
-                <select id="channel" name="Channel Transaksi" required>
-                    <option value="" disabled selected>Pilih Channel</option>
-                    <option value="Flip">Flip</option>
-                    <option value="EDC">EDC</option>
-                    <option value="Gopay">Gopay</option>
-                    <option value="Buku Agen">Buku Agen</option>
-                    <option value="PosPay">PosPay</option>
-                    <option value="QRIS">QRIS</option>
-                </select>
+        <!-- SUMMARY VIEW -->
+        <div id="summary-view" class="hidden">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-green-700">Ringkasan Keuntungan Harian</h2>
+                <button id="back-to-form-btn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition duration-150">
+                    &larr; Kembali ke Input
+                </button>
             </div>
 
-            <div class="form-group">
-                <label for="transactionType">Jenis Transaksi:</label>
-                <select id="transactionType" name="Jenis Transaksi" required>
-                    <option value="" disabled selected>Pilih Jenis Transaksi</option>
-                    <option value="Tarik Tunai">Tarik Tunai</option>
-                    <option value="Transfer">Transfer</option>
-                    <option value="Top Up E-Wallet">Top Up E-Wallet</option>
-                    <option value="Pulsa">Pulsa</option>
-                    <option value="Paket Data">Paket Data</option> <option value="Token Listrik">Token Listrik</option>
-                    <option value="Tagihan Listrik">Tagihan Listrik</option>
-                    <option value="Lainnya">Lainnya</option>
-                </select>
+            <!-- Filter Tanggal -->
+            <div class="mb-6 flex flex-wrap items-center space-y-2 sm:space-y-0 sm:space-x-4">
+                <label for="filter-date" class="font-medium text-gray-700">Pilih Tanggal:</label>
+                <input type="date" id="filter-date" class="form-input w-full sm:w-48" required>
+                <button id="apply-filter-btn" class="w-full sm:w-auto px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition duration-150">
+                    Terapkan Filter
+                </button>
             </div>
 
-            <div class="form-group hidden" id="otherTransactionGroup">
-                <label for="otherTransaction">Sebutkan Jenis Transaksi:</label>
-                <input type="text" id="otherTransaction" name="Detail Transaksi Lain" placeholder="Contoh: Pembayaran PDAM">
+            <!-- Ringkasan Global -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                <div class="p-5 bg-indigo-50 rounded-xl shadow-md border-b-4 border-indigo-500">
+                    <p class="text-sm text-gray-500 font-medium">Grand Total Channel (Modal)</p>
+                    <p id="grand-total-channel" class="text-2xl font-extrabold text-indigo-800 mt-1">Memuat...</p>
+                </div>
+                <div class="p-5 bg-green-50 rounded-xl shadow-md border-b-4 border-green-500">
+                    <p class="text-sm text-gray-500 font-medium">Grand Total Keuntungan (Profit)</p>
+                    <p id="grand-total-profit" class="text-2xl font-extrabold text-green-800 mt-1">Memuat...</p>
+                </div>
             </div>
 
-            <div class="form-group">
-                <label for="priceChannel">Harga Channel (Nominal Transaksi):</label>
-                <input type="text" id="priceChannel" name="Harga Channel" placeholder="Contoh: 100000" inputmode="numeric" required>
-                <small>Masukkan nominal tanpa titik atau koma (misalnya 100000)</small>
+            <!-- Tabel Ringkasan per Channel -->
+            <div class="overflow-x-auto shadow-lg rounded-xl">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-indigo-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Channel
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Total Harga Channel
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Total Keuntungan
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="summary-body" class="bg-white divide-y divide-gray-200">
+                        <tr><td colspan="3" class="text-center py-4 text-gray-500">Memuat data ringkasan...</td></tr>
+                    </tbody>
+                </table>
             </div>
+        </div>
 
-            <div class="form-group">
-                <label for="receivedAmount">Jumlah Diterima Agen:</label>
-                <input type="text" id="receivedAmount" name="Jumlah Diterima Agen" placeholder="Contoh: 102000" inputmode="numeric" required>
-                <small>Masukkan nominal tanpa titik atau koma (misalnya 102000)</small>
-            </div>
-
-            <div class="form-group">
-                <label for="customerInfo">Nomor Rekening/No Hp/Nama Customer:</label>
-                <input type="text" id="customerInfo" name="Info Customer" required>
-            </div>
-
-            <div class="form-group">
-                <label for="paymentStatus">Status Pembayaran:</label>
-                <select id="paymentStatus" name="Status Pembayaran" required>
-                    <option value="" disabled selected>Pilih Status</option>
-                    <option value="Lunas">Lunas</option>
-                    <option value="Terhutang">Terhutang</option>
-                </select>
-            </div>
-
-            <div class="form-group hidden" id="debtAmountGroup">
-                <label for="debtAmount">Jumlah Terhutang:</label>
-                <input type="text" id="debtAmount" name="Jumlah Terhutang" placeholder="Masukkan nominal terhutang" inputmode="numeric">
-                <small>Masukkan nominal tanpa titik atau koma</small>
-            </div>
-            
-            <button type="submit" id="submitBtn">Input Data</button>
-
-            <p id="message" class="hidden"></p>
-
-            <input type="hidden" name="callback" value="handleResponse">
-        </form>
     </div>
 
-    <iframe name="hiddenIframe" id="hiddenIframe" style="display:none;"></iframe>
+    <!-- MODAL -->
+    <div id="message-modal" class="modal-backdrop hidden">
+        <div class="bg-white p-8 rounded-xl shadow-2xl max-w-sm w-full transform transition-all scale-100 opacity-100">
+            <div class="flex justify-between items-center border-b pb-3 mb-4">
+                <h3 id="modal-title" class="text-xl font-bold text-indigo-600">Pesan</h3>
+                <button id="modal-close-btn" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+            </div>
+            <div id="modal-content" class="text-gray-700 text-center">
+                <!-- Content will be injected here -->
+            </div>
+            <div class="mt-6 text-right">
+                <button id="modal-close-btn-footer" class="px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600">Tutup</button>
+            </div>
+        </div>
+    </div>
 
-    <script src="script.js"></script>
+
+    <script>
+        // --- PENTING: GANTI URL DI BAWAH INI DENGAN URL GOOGLE APPS SCRIPT ANDA SETELAH DI-DEPLOY ---
+        // URL WEB GAS YANG BARU DARI USER: AKfycbwfnAbaOWHm-ZuJTHeK0tqQFyKeuCgeII3SghmZojIgBAIUVU7fcfvC59vRnqMkTgKm3g
+        const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwfnAbaOWHm-ZuJTHeK0tqQFyKeuCgeII3SghmZojIgBAIUVU7fcfvC59vRnqMkTgKm3g/exec';
+        // --------------------------------------------------------------------------------------------------
+
+        const CHANNELS = {
+            'Flip': {
+                products: ['Transfer Uang', 'TOP-UP E-wallet', 'Token Listrik', 'Tagihan Listrik', 'Pulsa', 'Paket Data'],
+                ewallets: ['Dana', 'Shopepay', 'Link Aja', 'OVO', 'Gopay', 'i-Saku'],
+                sheetName: 'Flip'
+            },
+            'Gopay': {
+                products: ['Pulsa', 'Paket Data', 'Token Listrik', 'Tagihan Listrik'],
+                sheetName: 'Gopay'
+            },
+            'Buku Agen': {
+                products: ['Tarik Tunai ATM', 'Transfer ATM', 'Pulsa', 'Paket Data', 'Token Listrik', 'Tagihan Listrik'],
+                sheetName: 'Buku Agen'
+            },
+            'QRIS': {
+                products: ['Tarik Tunai'],
+                sheetName: 'QRIS'
+            }
+        };
+
+        let currentChannel = '';
+
+        // --- DOM ELEMENTS ---
+        const greetingEl = document.getElementById('greeting');
+        const formContainerEl = document.getElementById('form-container');
+        const formTitleSpanEl = document.getElementById('form-title-span');
+        const dynamicFieldsEl = document.getElementById('dynamic-fields'); 
+        const transactionFormEl = document.getElementById('transaction-form');
+        const submitBtnEl = document.getElementById('submit-btn');
+        const summaryBtnEl = document.getElementById('summary-btn');
+        const summaryViewEl = document.getElementById('summary-view');
+        const applyFilterBtnEl = document.getElementById('apply-filter-btn');
+        const filterDateEl = document.getElementById('filter-date');
+        const summaryBodyEl = document.getElementById('summary-body');
+        const backToFormBtnEl = document.getElementById('back-to-form-btn');
+        const grandTotalChannelEl = document.getElementById('grand-total-channel');
+        const grandTotalProfitEl = document.getElementById('grand-total-profit');
+        const channelButtons = document.querySelectorAll('.channel-btn');
+
+        // --- MODAL ELEMENTS ---
+        const modalEl = document.getElementById('message-modal');
+        const modalTitleEl = document.getElementById('modal-title');
+        const modalContentEl = document.getElementById('modal-content');
+        const modalCloseBtnEl = document.getElementById('modal-close-btn');
+        const modalCloseBtnFooterEl = document.getElementById('modal-close-btn-footer');
+
+        // --- HELPER FUNCTIONS ---
+
+        function showModal(title, content) {
+            modalTitleEl.textContent = title;
+            modalContentEl.innerHTML = content;
+            modalEl.classList.remove('hidden');
+        }
+
+        function hideModal() {
+            modalEl.classList.add('hidden');
+        }
+        modalCloseBtnEl.addEventListener('click', hideModal);
+        modalCloseBtnFooterEl.addEventListener('click', hideModal); // Use dedicated function
+
+        function setButtonLoading(isLoading) {
+            submitBtnEl.disabled = isLoading;
+            if (isLoading) {
+                submitBtnEl.innerHTML = '<span class="spinner"></span> Mengirim...';
+            } else {
+                submitBtnEl.innerHTML = 'Kirim Data';
+            }
+        }
+
+        function getGreeting() {
+            const hour = new Date().getHours();
+            let greeting = 'Selamat ';
+            if (hour >= 4 && hour < 10) {
+                greeting += 'Pagi'; 
+            } else if (hour >= 10 && hour < 15) {
+                greeting += 'Siang'; 
+            } else if (hour >= 15 && hour < 18) {
+                greeting += 'Sore'; 
+            } else {
+                greeting += 'Malam'; 
+            }
+            // Greeting yang lebih personal
+            greetingEl.textContent = `${greeting} Ayangg 👋`;
+        }
+
+        /**
+         * Membuat field input angka dengan validasi hanya angka.
+         */
+        function createNumberInput(id, label) {
+            return `
+                <div class="p-3 border border-indigo-200 rounded-xl shadow-inner bg-indigo-50/50">
+                    <div class="form-group" id="group-${id}">
+                        <label for="${id}" class="form-label">${label}</label>
+                        <input type="text" id="${id}" name="${id}" class="form-input" placeholder="Masukkan angka (misalnya 50000)" required
+                            oninput="this.value = this.value.replace(/[^0-9]/g, '');">
+                        <p class="text-xs text-gray-500 mt-1">Input hanya angka. Akan diformat Rupiah di Spreadsheet.</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        /**
+         * Membuat field input teks/telepon.
+         */
+        function createTextInput(id, label, placeholder = 'Masukkan data') {
+            return `
+                <div class="form-group">
+                    <label for="${id}" class="form-label">${label}</label>
+                    <input type="text" id="${id}" name="${id}" class="form-input" placeholder="${placeholder}" required>
+                </div>
+            `;
+        }
+
+        /**
+         * Membuat field dropdown
+         */
+        function createSelect(id, label, options, isRequired = true) {
+            const optionsHtml = options.map(opt => `<option value="${opt}">${opt}</option>`).join('');
+            return `
+                <div class="form-group">
+                    <label for="${id}" class="form-label">${label}</label>
+                    <select id="${id}" name="${id}" class="form-select" ${isRequired ? 'required' : ''}>
+                        <option value="" disabled selected>Pilih salah satu...</option>
+                        ${optionsHtml}
+                    </select>
+                </div>
+            `;
+        }
+
+        function parseRupiahToNumber(value) {
+            if (typeof value === 'number') return value;
+            if (typeof value === 'string') {
+                // Hapus semua karakter non-angka kecuali koma/titik untuk desimal (walaupun di sini kita hanya fokus integer)
+                return parseInt(value.replace(/[^0-9]/g, ''), 10) || 0;
+            }
+            return 0;
+        }
+
+        function formatRupiah(number) {
+            if (isNaN(number)) number = 0;
+            
+            return new Intl.NumberFormat('id-ID', {
+                style: 'currency',
+                currency: 'IDR',
+                minimumFractionDigits: 0
+            }).format(number);
+        }
+
+        // === RETRY MECHANISM (PENTING UNTUK NO-CORS) ===
+
+        /**
+         * Melakukan fetch request dengan retry menggunakan exponential backoff.
+         */
+        async function fetchWithRetry(url, options, maxRetries = 3) {
+            for (let i = 0; i < maxRetries; i++) {
+                try {
+                    const response = await fetch(url, options);
+                    
+                    // Untuk Apps Script POST (no-cors), kita berasumsi sukses jika tidak ada error jaringan.
+                    if (options.mode !== 'no-cors' && !response.ok) {
+                          throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    
+                    return response; 
+                } catch (error) {
+                    // Hanya log peringatan, jangan dianggap fatal kecuali semua percobaan habis
+                    if (i < maxRetries - 1) {
+                         // Tunggu dengan backoff (1s, 2s, 4s)
+                         const delay = Math.pow(2, i) * 1000;
+                         await new Promise(resolve => setTimeout(resolve, delay));
+                    } else {
+                        throw new Error(`Gagal mengirim data setelah ${maxRetries} percobaan. Error: ${error.message}`);
+                    }
+                }
+            }
+        }
+
+        // ===========================
+
+
+        // --- FORM RENDERING & DYNAMICS ---
+
+        /**
+         * Memuat ulang formulir berdasarkan channel yang dipilih
+         */
+        function renderForm(channel) {
+            currentChannel = channel;
+            formTitleSpanEl.textContent = channel;
+            formContainerEl.classList.remove('hidden');
+            summaryViewEl.classList.add('hidden');
+
+            const config = CHANNELS[channel];
+            
+            let html = '';
+
+            // BARIS 1: IDENTITAS 
+            html += createTextInput('namaUser', 'Nama User', 'Masukkan nama pelanggan (boleh angka dan huruf)'); 
+            html += '<div></div>'; // Placeholder kosong agar layout rapi
+
+            // BARIS 2: PRODUK & E-WALLET
+            html += createSelect('produk', 'Produk', config.products);
+
+            if (channel === 'Flip') {
+                html += '<div id="ewallet-dropdown-placeholder" class="form-group hidden"></div>';
+            } else {
+                html += '<div></div>'; 
+            }
+
+            // BARIS 3: HARGA CHANNEL & JUAL (Menggunakan format Rupiah input)
+            html += createNumberInput('hargaChannel', 'Harga Channel (Modal/Rp)'); 
+            html += createNumberInput('hargaJual', 'Harga Jual (Penerimaan/Rp)'); 
+            
+            // BARIS 4: CASH & ONLINE MASUK
+            html += createNumberInput('cashDiterimaAgen', 'Cash Diterima Agen (Rp)'); 
+            html += createNumberInput('onlineMasuk', 'Online Masuk (Rp)'); 
+            
+            // BARIS 5: STATUS & JUMLAH TERHUTANG
+            html += createSelect('status', 'Status', ['Lunas', 'Terhutang']); 
+            html += '<div id="terhutang-input-placeholder" class="form-group hidden"></div>'; 
+
+            dynamicFieldsEl.innerHTML = html;
+            transactionFormEl.reset(); // Reset form
+
+            // Tambahkan event listener untuk dinamika form
+            document.getElementById('produk')?.addEventListener('change', handleProductChange);
+            document.getElementById('status')?.addEventListener('change', handleStatusChange);
+
+            // Update active state for buttons
+            channelButtons.forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`button[data-channel="${channel}"]`).classList.add('active');
+        }
+
+        function handleProductChange(event) {
+            const product = event.target.value;
+            const ewalletPlaceholder = document.getElementById('ewallet-dropdown-placeholder');
+
+            if (currentChannel === 'Flip' && product === 'TOP-UP E-wallet') {
+                // Pastikan placeholder ada sebelum mengisi
+                if (ewalletPlaceholder) {
+                    ewalletPlaceholder.innerHTML = createSelect('ewallet', 'Pilih E-wallet', CHANNELS['Flip'].ewallets);
+                    ewalletPlaceholder.classList.remove('hidden');
+                }
+            } else {
+                if (ewalletPlaceholder) {
+                    ewalletPlaceholder.innerHTML = '';
+                    ewalletPlaceholder.classList.add('hidden');
+                }
+            }
+        }
+
+        function handleStatusChange(event) {
+            const status = event.target.value;
+            const terhutangPlaceholder = document.getElementById('terhutang-input-placeholder');
+
+            if (status === 'Terhutang') {
+                // Pastikan placeholder ada sebelum mengisi
+                if (terhutangPlaceholder) {
+                    terhutangPlaceholder.innerHTML = createNumberInput('jumlahTerhutang', 'Jumlah Terhutang (Rp)');
+                    terhutangPlaceholder.classList.remove('hidden');
+                }
+            } else {
+                if (terhutangPlaceholder) {
+                    terhutangPlaceholder.innerHTML = '';
+                    terhutangPlaceholder.classList.add('hidden');
+                }
+            }
+        }
+
+
+        // --- FORM SUBMISSION ---
+
+        transactionFormEl.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            setButtonLoading(true);
+
+            const formData = new FormData(e.target);
+            const data = {};
+            const sheetName = CHANNELS[currentChannel].sheetName;
+
+            // 1. Ekstrak Data dan Bersihkan Angka
+            for (const [key, value] of formData.entries()) {
+                if (['hargaChannel', 'hargaJual', 'cashDiterimaAgen', 'onlineMasuk', 'jumlahTerhutang'].includes(key)) {
+                    // Hapus semua karakter non-angka
+                    data[key] = value.replace(/[^0-9]/g, '') || '0'; 
+                } else { 
+                    data[key] = value;
+                }
+            }
+            
+            // Sesuaikan key untuk identitas/nama
+            data.identitas = data.namaUser;
+            delete data.namaUser;
+
+            // 2. Tambahkan metadata
+            data.channel = currentChannel;
+            data.sheetName = sheetName;
+            data.action = 'submitData'; // Tambahkan action untuk Apps Script
+            data.timestamp = new Date().toLocaleString('id-ID', {
+                timeZone: 'Asia/Jakarta',
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+
+            try {
+                // Gunakan fungsi fetchWithRetry untuk POST (no-cors)
+                await fetchWithRetry(GAS_WEB_APP_URL, {
+                    method: 'POST',
+                    mode: 'no-cors', 
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: new URLSearchParams(data)
+                });
+                
+                transactionFormEl.reset();
+                document.getElementById('ewallet-dropdown-placeholder')?.classList.add('hidden');
+                document.getElementById('terhutang-input-placeholder')?.classList.add('hidden');
+                
+                // Sembunyikan form setelah sukses (opsional, tergantung preferensi user)
+                formContainerEl.classList.add('hidden');
+                channelButtons.forEach(btn => btn.classList.remove('active'));
+
+
+                showModal('Sukses!', `<p>Data transaksi <b>(${currentChannel})</b> berhasil dikirim ke Spreadsheet Anda!</p>
+                <p class="text-sm mt-2 text-gray-500">Silakan pilih Channel lain atau lihat Ringkasan.</p>`);
+
+            } catch (error) {
+                console.error('Error mengirim data:', error);
+                // Pesan yang lebih eksplisit untuk debugging
+                showModal('Gagal Mengirim Data!', 
+                    `<p>Terjadi kesalahan. Ini bisa jadi disebabkan oleh:</p>
+                    <ul class="list-disc list-inside mt-2 text-left text-sm">
+                        <li>Kesalahan di kode Apps Script Anda (WAJIB cek halaman **Logs** di Apps Script!).</li>
+                        <li>Izin akses Apps Script belum diatur ke 'Anyone'.</li>
+                        <li>Masalah koneksi jaringan.</li>
+                    </ul>
+                    <p class="mt-2 text-sm text-red-700">Detail Error: ${error.message}</p>
+                `);
+            } finally {
+                setButtonLoading(false);
+            }
+        });
+
+
+        // --- SUMMARY VIEW LOGIC ---
+
+        summaryBtnEl.addEventListener('click', () => {
+            formContainerEl.classList.add('hidden');
+            summaryViewEl.classList.remove('hidden');
+            channelButtons.forEach(btn => btn.classList.remove('active'));
+
+            if (!filterDateEl.value) {
+                // Set tanggal filter ke hari ini
+                const today = new Date().toISOString().split('T')[0];
+                filterDateEl.value = today; 
+            }
+            loadSummaryData();
+        });
+
+        backToFormBtnEl.addEventListener('click', () => {
+            formContainerEl.classList.remove('hidden');
+            summaryViewEl.classList.add('hidden');
+        });
+
+        applyFilterBtnEl.addEventListener('click', loadSummaryData);
+
+
+        async function loadSummaryData() {
+            summaryBodyEl.innerHTML = `<tr><td colspan="3" class="text-center py-4 text-gray-500">Memuat data ringkasan...</td></tr>`;
+            grandTotalChannelEl.textContent = 'Memuat...';
+            grandTotalProfitEl.textContent = 'Memuat...';
+
+            const selectedDate = filterDateEl.value; 
+            // Menggunakan GET request untuk data ringkasan (disarankan oleh Google)
+            const apiUrl = `${GAS_WEB_APP_URL}?action=getSummary&date=${selectedDate}`;
+
+            try {
+                // Karena ini GET dan mengharapkan JSON, kita bisa menggunakan response.json()
+                const response = await fetch(apiUrl);
+
+                if (!response.ok) {
+                    throw new Error(`Gagal Fetch Ringkasan. Status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                renderSummaryTable(data, selectedDate);
+
+            } catch (error) {
+                console.error('Error memuat data ringkasan:', error);
+                summaryBodyEl.innerHTML = `
+                    <tr>
+                        <td colspan="3" class="text-center py-4 text-red-600 font-medium">
+                            Gagal memuat ringkasan. (Cek Logs GAS Anda!) <br/> (${error.message})
+                        </td>
+                    </tr>
+                `;
+                grandTotalChannelEl.textContent = formatRupiah(0);
+                grandTotalProfitEl.textContent = formatRupiah(0);
+            }
+        }
+
+        function renderSummaryTable(summaryData, date) {
+            let rowsHtml = '';
+            let grandTotalChannel = 0;
+            let grandTotalProfit = 0;
+
+            const channels = ['Flip', 'Gopay', 'Buku Agen', 'QRIS'];
+
+            for (const channel of channels) {
+                // Data mungkin sudah diformat Rupiah dari Apps Script, jadi kita parsing lagi untuk total global
+                const data = summaryData[channel] || { totalHargaChannel: 'Rp 0', totalKeuntungan: 'Rp 0' };
+                
+                // Gunakan parseRupiahToNumber untuk akumulasi total global
+                const totalChannel = parseRupiahToNumber(data.totalHargaChannel);
+                const totalProfit = parseRupiahToNumber(data.totalKeuntungan);
+
+                grandTotalChannel += totalChannel;
+                grandTotalProfit += totalProfit;
+
+                // Tampilkan data yang sudah diformat dari Apps Script (atau default 'Rp 0')
+                rowsHtml += `
+                    <tr class="hover:bg-gray-100">
+                        <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900">${channel}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-gray-800">${data.totalHargaChannel || formatRupiah(0)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right font-bold ${totalProfit >= 0 ? 'text-green-600' : 'text-red-600'}">${data.totalKeuntungan || formatRupiah(0)}</td>
+                    </tr>
+                `;
+            }
+
+            if (!rowsHtml) {
+                rowsHtml = `<tr><td colspan="3" class="text-center py-4 text-gray-500">Tidak ada data transaksi untuk tanggal ${date}.</td></tr>`;
+            }
+
+            summaryBodyEl.innerHTML = rowsHtml;
+            grandTotalChannelEl.textContent = formatRupiah(grandTotalChannel);
+            grandTotalProfitEl.textContent = formatRupiah(grandTotalProfit);
+        }
+
+
+        // --- INITIALIZATION ---
+        document.addEventListener('DOMContentLoaded', () => {
+            getGreeting();
+            
+            channelButtons.forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const channel = e.target.dataset.channel;
+                    // Logika toggle: Jika channel yang sama diklik, sembunyikan form
+                    if (currentChannel === channel && !formContainerEl.classList.contains('hidden')) {
+                        formContainerEl.classList.add('hidden');
+                        currentChannel = '';
+                        button.classList.remove('active');
+                    } else {
+                        renderForm(channel);
+                    }
+                    summaryViewEl.classList.add('hidden');
+                });
+            });
+        });
+    </script>
 </body>
 </html>
