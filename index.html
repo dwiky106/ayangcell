@@ -83,6 +83,17 @@
             justify-content: center;
             align-items: center;
         }
+        /* Style untuk Debug Panel */
+        .debug-panel {
+            background-color: #fff3cd; /* yellow-100 */
+            border-left: 5px solid #ffc107; /* yellow-500 */
+            color: #856404; /* yellow-800 */
+            padding: 10px;
+            margin-top: 20px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            word-break: break-all;
+        }
     </style>
 </head>
 <body class="p-4 sm:p-8">
@@ -112,7 +123,14 @@
             <h2 class="text-2xl font-bold mb-6 text-indigo-800 border-b pb-3">
                 Input Transaksi: <span id="form-title-span">Channel</span>
             </h2>
-            <form id="transaction-form">
+            <!-- Form sekarang tidak memiliki target/method, akan dihandle oleh JS (fetch) -->
+            <form id="transaction-form" class="needs-validation" novalidate>
+                <!-- Hidden inputs for sheetName, channel, and action -->
+                <input type="hidden" name="action" value="submitData">
+                <input type="hidden" name="sheetName" id="input-sheetName" value="">
+                <input type="hidden" name="channel" id="input-channel" value="">
+                <input type="hidden" name="timestamp" id="input-timestamp" value="">
+                
                 <!-- Grid 2 Kolom untuk field dinamis -->
                 <div id="dynamic-fields" class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
                     <!-- Field akan di-inject di sini oleh JavaScript -->
@@ -177,6 +195,13 @@
                     </tbody>
                 </table>
             </div>
+            
+            <!-- DEBUG PANEL BARU -->
+            <div id="debug-info" class="debug-panel mt-6">
+                <p class="font-bold text-sm mb-1">🔍 Kalo ada error kasih tau mas dwiky ya Sayang:</p>
+                <p><strong>Checking Kode Error:</strong> <span id="debug-url"></span></p>
+                <p><strong>Permintaan Terakhir:</strong> <span id="debug-last-request">N/A</span></p>
+            </div>
         </div>
 
     </div>
@@ -199,9 +224,10 @@
 
 
     <script>
-        // --- PENTING: GANTI URL DI BAWAH INI DENGAN URL GOOGLE APPS SCRIPT ANDA SETELAH DI-DEPLOY ---
-        // URL WEB GAS YANG BARU DARI USER: AKfycbwfnAbaOWHm-ZuJTHeK0tqQFyKeuCgeII3SghmZojIgBAIUVU7fcfvC59vRnqMkTgKm3g
-        const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwfnAbaOWHm-ZuJTHeK0tqQFyKeuCgeII3SghmZojIgBAIUVU7fcfvC59vRnqMkTgKm3g/exec';
+        // =========================================================================
+        // >>>>>>>>>>>>>>>> URL WEB APP GAS BARU ANDA <<<<<<<<<<<<<<<
+        // PASTI KAN INI ADALAH URL DARI DEPLOYMENT TERBARU ANDA
+        const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxySyBrngcBAyB8AOakC3976YwzCSh70ClztiExBgDAxKcUwSuhrDhPMhIPAcyRcaCa8A/exec'; 
         // --------------------------------------------------------------------------------------------------
 
         const CHANNELS = {
@@ -233,6 +259,10 @@
         const dynamicFieldsEl = document.getElementById('dynamic-fields'); 
         const transactionFormEl = document.getElementById('transaction-form');
         const submitBtnEl = document.getElementById('submit-btn');
+        const inputSheetNameEl = document.getElementById('input-sheetName');
+        const inputChannelEl = document.getElementById('input-channel');
+        const inputTimestampEl = document.getElementById('input-timestamp');
+        
         const summaryBtnEl = document.getElementById('summary-btn');
         const summaryViewEl = document.getElementById('summary-view');
         const applyFilterBtnEl = document.getElementById('apply-filter-btn');
@@ -243,6 +273,10 @@
         const grandTotalProfitEl = document.getElementById('grand-total-profit');
         const channelButtons = document.querySelectorAll('.channel-btn');
 
+        // --- DEBUG ELEMENTS ---
+        const debugUrlEl = document.getElementById('debug-url');
+        const debugLastRequestEl = document.getElementById('debug-last-request');
+
         // --- MODAL ELEMENTS ---
         const modalEl = document.getElementById('message-modal');
         const modalTitleEl = document.getElementById('modal-title');
@@ -252,8 +286,10 @@
 
         // --- HELPER FUNCTIONS ---
 
-        function showModal(title, content) {
+        function showModal(title, content, isError = false) {
             modalTitleEl.textContent = title;
+            modalTitleEl.classList.toggle('text-red-600', isError);
+            modalTitleEl.classList.toggle('text-indigo-600', !isError);
             modalContentEl.innerHTML = content;
             modalEl.classList.remove('hidden');
         }
@@ -262,7 +298,7 @@
             modalEl.classList.add('hidden');
         }
         modalCloseBtnEl.addEventListener('click', hideModal);
-        modalCloseBtnFooterEl.addEventListener('click', hideModal); // Use dedicated function
+        modalCloseBtnFooterEl.addEventListener('click', hideModal); 
 
         function setButtonLoading(isLoading) {
             submitBtnEl.disabled = isLoading;
@@ -285,29 +321,22 @@
             } else {
                 greeting += 'Malam'; 
             }
-            // Greeting yang lebih personal
             greetingEl.textContent = `${greeting} Ayangg 👋`;
         }
 
-        /**
-         * Membuat field input angka dengan validasi hanya angka.
-         */
         function createNumberInput(id, label) {
             return `
                 <div class="p-3 border border-indigo-200 rounded-xl shadow-inner bg-indigo-50/50">
                     <div class="form-group" id="group-${id}">
                         <label for="${id}" class="form-label">${label}</label>
-                        <input type="text" id="${id}" name="${id}" class="form-input" placeholder="Masukkan angka (misalnya 50000)" required
-                            oninput="this.value = this.value.replace(/[^0-9]/g, '');">
-                        <p class="text-xs text-gray-500 mt-1">Input hanya angka. Akan diformat Rupiah di Spreadsheet.</p>
+                        <input type="text" id="${id}" name="${id}" class="form-input" placeholder="Masukkan angka (misalnya 50000)" 
+                            oninput="this.value = this.value.replace(/[^0-9-]/g, '');">
+                        <p class="text-xs text-gray-500 mt-1">Input hanya angka (boleh negatif).</p>
                     </div>
                 </div>
             `;
         }
 
-        /**
-         * Membuat field input teks/telepon.
-         */
         function createTextInput(id, label, placeholder = 'Masukkan data') {
             return `
                 <div class="form-group">
@@ -317,9 +346,6 @@
             `;
         }
 
-        /**
-         * Membuat field dropdown
-         */
         function createSelect(id, label, options, isRequired = true) {
             const optionsHtml = options.map(opt => `<option value="${opt}">${opt}</option>`).join('');
             return `
@@ -333,14 +359,22 @@
             `;
         }
 
+        /**
+         * @description Mengubah string Rupiah menjadi nilai numerik yang bersih.
+         */
         function parseRupiahToNumber(value) {
             if (typeof value === 'number') return value;
             if (typeof value === 'string') {
-                // Hapus semua karakter non-angka kecuali koma/titik untuk desimal (walaupun di sini kita hanya fokus integer)
-                return parseInt(value.replace(/[^0-9]/g, ''), 10) || 0;
+                let cleanedValue = value.toString().replace(/[^0-9-]/g, '');
+                
+                // Menghapus tanda minus yang berlebihan (hanya yang pertama yang diizinkan)
+                const number = parseInt(cleanedValue.trim(), 10);
+                
+                return isNaN(number) ? 0 : number; 
             }
             return 0;
         }
+
 
         function formatRupiah(number) {
             if (isNaN(number)) number = 0;
@@ -352,77 +386,83 @@
             }).format(number);
         }
 
-        // === RETRY MECHANISM (PENTING UNTUK NO-CORS) ===
-
-        /**
-         * Melakukan fetch request dengan retry menggunakan exponential backoff.
-         */
+        // --- RETRY MECHANISM (Hanya untuk GET Summary) ---
         async function fetchWithRetry(url, options, maxRetries = 3) {
             for (let i = 0; i < maxRetries; i++) {
                 try {
-                    const response = await fetch(url, options);
-                    
-                    // Untuk Apps Script POST (no-cors), kita berasumsi sukses jika tidak ada error jaringan.
-                    if (options.mode !== 'no-cors' && !response.ok) {
-                          throw new Error(`HTTP error! Status: ${response.status}`);
+                    if (GAS_WEB_APP_URL === 'GANTI_DENGAN_URL_WEB_APP_APPS_SCRIPT_ANDA') {
+                         throw new Error("ERROR: URL Web App belum diatur di dashboard_transaksi_agen.html.");
                     }
-                    
+                    const response = await fetch(url, options);
+                    if (!response.ok) {
+                          try {
+                             // Coba parse respons JSON untuk error Apps Script
+                             const errorData = await response.json();
+                             if (errorData.error) throw new Error(errorData.error);
+                          } catch (jsonError) {
+                             throw new Error(`HTTP error! Status: ${response.status}`);
+                          }
+                    }
                     return response; 
                 } catch (error) {
-                    // Hanya log peringatan, jangan dianggap fatal kecuali semua percobaan habis
                     if (i < maxRetries - 1) {
-                         // Tunggu dengan backoff (1s, 2s, 4s)
                          const delay = Math.pow(2, i) * 1000;
                          await new Promise(resolve => setTimeout(resolve, delay));
                     } else {
-                        throw new Error(`Gagal mengirim data setelah ${maxRetries} percobaan. Error: ${error.message}`);
+                        throw new Error(error.message || `Gagal mengambil data setelah ${maxRetries} percobaan. Cek koneksi internet Anda atau Deploy Apps Script.`);
                     }
                 }
             }
         }
 
-        // ===========================
-
-
         // --- FORM RENDERING & DYNAMICS ---
-
-        /**
-         * Memuat ulang formulir berdasarkan channel yang dipilih
-         */
         function renderForm(channel) {
             currentChannel = channel;
             formTitleSpanEl.textContent = channel;
             formContainerEl.classList.remove('hidden');
             summaryViewEl.classList.add('hidden');
+            
+            // Set hidden inputs
+            inputSheetNameEl.value = CHANNELS[channel].sheetName;
+            inputChannelEl.value = channel;
 
             const config = CHANNELS[channel];
             
             let html = '';
 
-            // BARIS 1: IDENTITAS 
-            html += createTextInput('namaUser', 'Nama User', 'Masukkan nama pelanggan (boleh angka dan huruf)'); 
-            html += '<div></div>'; // Placeholder kosong agar layout rapi
-
-            // BARIS 2: PRODUK & E-WALLET
+            // BARIS 1: IDENTITAS & PRODUK
+            // **PENTING: Urutan penambahan elemen form di HTML ini akan menentukan urutan data yang dikirim!**
+            
+            // Kolom D: Nama User/Identitas
+            html += createTextInput('identitas', 'Nama User/Identitas', 'Masukkan nama pelanggan (boleh angka dan huruf)'); 
+            
+            // Kolom C: Produk
             html += createSelect('produk', 'Produk', config.products);
 
+            // BARIS 2: E-WALLET & STATUS
             if (channel === 'Flip') {
-                html += '<div id="ewallet-dropdown-placeholder" class="form-group hidden"></div>';
+                html += '<div id="ewallet-dropdown-placeholder" class="form-group hidden"></div>'; // Kolom E
             } else {
-                html += '<div></div>'; 
+                html += '<div></div>'; // Placeholder
             }
-
-            // BARIS 3: HARGA CHANNEL & JUAL (Menggunakan format Rupiah input)
-            html += createNumberInput('hargaChannel', 'Harga Channel (Modal/Rp)'); 
-            html += createNumberInput('hargaJual', 'Harga Jual (Penerimaan/Rp)'); 
+            
+            // Kolom F: Status
+            html += createSelect('status', 'Status Transaksi', ['Lunas', 'Terhutang']); 
+            
+            // BARIS 3: HARGA CHANNEL & JUAL
+            // Kolom G: Harga Channel
+            html += createNumberInput('hargaChannel', 'Harga Channel (Modal)'); 
+            // Kolom H: Harga Jual
+            html += createNumberInput('hargaJual', 'Harga Jual (Penerimaan)'); 
             
             // BARIS 4: CASH & ONLINE MASUK
-            html += createNumberInput('cashDiterimaAgen', 'Cash Diterima Agen (Rp)'); 
-            html += createNumberInput('onlineMasuk', 'Online Masuk (Rp)'); 
+            // Kolom I: Cash Diterima Agen
+            html += createNumberInput('cashDiterimaAgen', 'Cash Diterima Agen'); 
+            // Kolom J: Online Masuk
+            html += createNumberInput('onlineMasuk', 'Online Masuk'); 
             
-            // BARIS 5: STATUS & JUMLAH TERHUTANG
-            html += createSelect('status', 'Status', ['Lunas', 'Terhutang']); 
-            html += '<div id="terhutang-input-placeholder" class="form-group hidden"></div>'; 
+            // BARIS 5: JUMLAH TERHUTANG (KOLOM K) - Selalu ada placeholder
+            html += '<div id="terhutang-input-placeholder" class="form-group hidden md:col-span-2"></div>'; // Kolom K
 
             dynamicFieldsEl.innerHTML = html;
             transactionFormEl.reset(); // Reset form
@@ -439,17 +479,20 @@
         function handleProductChange(event) {
             const product = event.target.value;
             const ewalletPlaceholder = document.getElementById('ewallet-dropdown-placeholder');
+            const ewalletInput = document.getElementById('ewallet');
 
             if (currentChannel === 'Flip' && product === 'TOP-UP E-wallet') {
-                // Pastikan placeholder ada sebelum mengisi
                 if (ewalletPlaceholder) {
                     ewalletPlaceholder.innerHTML = createSelect('ewallet', 'Pilih E-wallet', CHANNELS['Flip'].ewallets);
+                    document.getElementById('ewallet')?.setAttribute('required', 'required');
                     ewalletPlaceholder.classList.remove('hidden');
                 }
             } else {
                 if (ewalletPlaceholder) {
                     ewalletPlaceholder.innerHTML = '';
                     ewalletPlaceholder.classList.add('hidden');
+                    // Jika field ewallet ada, pastikan tidak required jika disembunyikan
+                    if (ewalletInput) ewalletInput.removeAttribute('required');
                 }
             }
         }
@@ -459,9 +502,16 @@
             const terhutangPlaceholder = document.getElementById('terhutang-input-placeholder');
 
             if (status === 'Terhutang') {
-                // Pastikan placeholder ada sebelum mengisi
                 if (terhutangPlaceholder) {
-                    terhutangPlaceholder.innerHTML = createNumberInput('jumlahTerhutang', 'Jumlah Terhutang (Rp)');
+                    // Gunakan ID unik untuk input Terhutang agar terdaftar di FormData
+                    terhutangPlaceholder.innerHTML = createNumberInput('jumlahTerhutang', 'Jumlah Terhutang (Kolom K)');
+                    
+                    const numInput = document.getElementById('jumlahTerhutang');
+                    if (numInput) {
+                        numInput.oninput = function() { this.value = this.value.replace(/[^0-9-]/g, ''); };
+                        numInput.setAttribute('required', 'required');
+                    }
+
                     terhutangPlaceholder.classList.remove('hidden');
                 }
             } else {
@@ -473,35 +523,37 @@
         }
 
 
-        // --- FORM SUBMISSION ---
+        // --- FORM SUBMISSION (Menggunakan FETCH API) ---
 
         transactionFormEl.addEventListener('submit', async function(e) {
             e.preventDefault();
-            setButtonLoading(true);
-
-            const formData = new FormData(e.target);
-            const data = {};
-            const sheetName = CHANNELS[currentChannel].sheetName;
-
-            // 1. Ekstrak Data dan Bersihkan Angka
-            for (const [key, value] of formData.entries()) {
-                if (['hargaChannel', 'hargaJual', 'cashDiterimaAgen', 'onlineMasuk', 'jumlahTerhutang'].includes(key)) {
-                    // Hapus semua karakter non-angka
-                    data[key] = value.replace(/[^0-9]/g, '') || '0'; 
-                } else { 
-                    data[key] = value;
-                }
+            
+            if (GAS_WEB_APP_URL === 'GANTI_DENGAN_URL_WEB_APP_APPS_SCRIPT_ANDA') {
+                showModal('ERROR PENTING', '<p class="text-red-600 font-semibold">URL Web App Apps Script belum diatur!</p><p class="text-sm mt-2">Silakan ganti placeholder **GAS_WEB_APP_URL** di kode HTML dengan URL Web App Anda yang valid.</p>', true);
+                return;
             }
             
-            // Sesuaikan key untuk identitas/nama
-            data.identitas = data.namaUser;
-            delete data.namaUser;
+            if (!transactionFormEl.checkValidity()) {
+                showModal('Validasi Data', '<p class="text-yellow-600 font-semibold">Mohon lengkapi semua field yang diperlukan!</p>', false);
+                return;
+            }
 
-            // 2. Tambahkan metadata
-            data.channel = currentChannel;
-            data.sheetName = sheetName;
-            data.action = 'submitData'; // Tambahkan action untuk Apps Script
-            data.timestamp = new Date().toLocaleString('id-ID', {
+            setButtonLoading(true);
+
+            // 1. Ambil data form
+            const formData = new FormData(transactionFormEl);
+
+            // 2. Bersihkan input numerik dan pastikan hanya angka (atau string kosong jika kosong)
+            const numberInputs = ['hargaChannel', 'hargaJual', 'cashDiterimaAgen', 'onlineMasuk', 'jumlahTerhutang'];
+            for (const key of numberInputs) {
+                let value = formData.get(key) || '';
+                // Hapus semua karakter kecuali angka dan minus, lalu simpan kembali
+                value = value.toString().replace(/[^0-9-]/g, '');
+                formData.set(key, value); 
+            }
+
+            // 3. Tambahkan Timestamp dan pastikan field hidden terisi
+            const timestamp = new Date().toLocaleString('id-ID', {
                 timeZone: 'Asia/Jakarta',
                 year: 'numeric',
                 month: '2-digit',
@@ -510,49 +562,54 @@
                 minute: '2-digit',
                 second: '2-digit'
             });
+            formData.set('timestamp', timestamp);
 
+            
+            // 4. Kirim data menggunakan fetch API (POST)
             try {
-                // Gunakan fungsi fetchWithRetry untuk POST (no-cors)
-                await fetchWithRetry(GAS_WEB_APP_URL, {
+                const response = await fetchWithRetry(GAS_WEB_APP_URL, {
                     method: 'POST',
-                    mode: 'no-cors', 
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                    body: new URLSearchParams(data)
+                    // Gunakan FormData langsung, Apps Script akan membacanya sebagai e.parameter
+                    body: formData 
                 });
                 
-                transactionFormEl.reset();
-                document.getElementById('ewallet-dropdown-placeholder')?.classList.add('hidden');
-                document.getElementById('terhutang-input-placeholder')?.classList.add('hidden');
-                
-                // Sembunyikan form setelah sukses (opsional, tergantung preferensi user)
-                formContainerEl.classList.add('hidden');
-                channelButtons.forEach(btn => btn.classList.remove('active'));
+                // Apps Script merespons dalam bentuk JSON
+                const result = await response.json();
 
+                if (result.status === "SUCCESS") {
+                    showModal('Status Pengiriman Data', `<p class="text-green-600 font-semibold">Data transaksi <b>(${currentChannel})</b> berhasil dikirim.</p>`);
+                    
+                    // --- RESET UI SETELAN SUKSES ---
+                    transactionFormEl.reset();
+                    document.getElementById('ewallet-dropdown-placeholder')?.classList.add('hidden');
+                    document.getElementById('terhutang-input-placeholder')?.classList.add('hidden');
+                    formContainerEl.classList.add('hidden');
+                    channelButtons.forEach(btn => btn.classList.remove('active'));
 
-                showModal('Sukses!', `<p>Data transaksi <b>(${currentChannel})</b> berhasil dikirim ke Spreadsheet Anda!</p>
-                <p class="text-sm mt-2 text-gray-500">Silakan pilih Channel lain atau lihat Ringkasan.</p>`);
+                } else {
+                    // Jika status ERROR dari Apps Script
+                    throw new Error(result.error || "Gagal Kirim Data: Respon Apps Script tidak sesuai.");
+                }
 
             } catch (error) {
-                console.error('Error mengirim data:', error);
-                // Pesan yang lebih eksplisit untuk debugging
-                showModal('Gagal Mengirim Data!', 
-                    `<p>Terjadi kesalahan. Ini bisa jadi disebabkan oleh:</p>
-                    <ul class="list-disc list-inside mt-2 text-left text-sm">
-                        <li>Kesalahan di kode Apps Script Anda (WAJIB cek halaman **Logs** di Apps Script!).</li>
-                        <li>Izin akses Apps Script belum diatur ke 'Anyone'.</li>
-                        <li>Masalah koneksi jaringan.</li>
-                    </ul>
-                    <p class="mt-2 text-sm text-red-700">Detail Error: ${error.message}</p>
-                `);
+                 console.error('Error saat submit data:', error);
+                 let displayError = error.message || "Terjadi error saat mengirim data ke Apps Script.";
+                 
+                 // Handle error spesifik dari GAS
+                 if (displayError.includes('Spreadsheet ID')) {
+                     displayError = 'ERROR: ID Spreadsheet salah atau belum diatur di Kode.gs.';
+                 } else if (displayError.includes('Sheet dengan nama')) {
+                     displayError = `ERROR: Sheet '${currentChannel}' tidak ditemukan di Spreadsheet.`;
+                 }
+
+                 showModal('Gagal Kirim Data', `<p class="text-red-600 font-semibold">${displayError}</p>`, true);
             } finally {
                 setButtonLoading(false);
             }
         });
 
 
-        // --- SUMMARY VIEW LOGIC ---
+        // --- SUMMARY VIEW LOGIC (Menggunakan Fetch) ---
 
         summaryBtnEl.addEventListener('click', () => {
             formContainerEl.classList.add('hidden');
@@ -560,7 +617,6 @@
             channelButtons.forEach(btn => btn.classList.remove('active'));
 
             if (!filterDateEl.value) {
-                // Set tanggal filter ke hari ini
                 const today = new Date().toISOString().split('T')[0];
                 filterDateEl.value = today; 
             }
@@ -579,71 +635,99 @@
             summaryBodyEl.innerHTML = `<tr><td colspan="3" class="text-center py-4 text-gray-500">Memuat data ringkasan...</td></tr>`;
             grandTotalChannelEl.textContent = 'Memuat...';
             grandTotalProfitEl.textContent = 'Memuat...';
+            debugLastRequestEl.textContent = 'Mengirim Permintaan...';
 
             const selectedDate = filterDateEl.value; 
-            // Menggunakan GET request untuk data ringkasan (disarankan oleh Google)
+            if (!selectedDate) {
+                summaryBodyEl.innerHTML = `<tr><td colspan="3" class="text-center py-4 text-red-500">Pilih tanggal terlebih dahulu!</td></tr>`;
+                return;
+            }
+            
             const apiUrl = `${GAS_WEB_APP_URL}?action=getSummary&date=${selectedDate}`;
+            debugUrlEl.textContent = GAS_WEB_APP_URL;
+            debugLastRequestEl.textContent = `GET: ${apiUrl}`;
+
 
             try {
-                // Karena ini GET dan mengharapkan JSON, kita bisa menggunakan response.json()
-                const response = await fetch(apiUrl);
-
-                if (!response.ok) {
-                    throw new Error(`Gagal Fetch Ringkasan. Status: ${response.status}`);
-                }
+                const response = await fetchWithRetry(apiUrl, { method: 'GET' });
                 
                 const data = await response.json();
                 
                 if (data.error) {
+                    const errorMessage = data.error.includes('URL Web App belum diatur') ? 
+                        '⚠️ URL Web App belum diatur di HTML!' : 
+                        'Gagal memuat. Cek Logs GET Apps Script Anda.';
+                    
+                    showModal('Error Memuat Ringkasan', `<p class="text-red-600 font-semibold">${errorMessage}</p><p class="text-sm mt-2 text-gray-500">Detail: ${data.error}</p>`, true);
                     throw new Error(data.error);
                 }
 
                 renderSummaryTable(data, selectedDate);
+                debugLastRequestEl.textContent = `SUCCESS (Data Ditemukan)`;
+
 
             } catch (error) {
                 console.error('Error memuat data ringkasan:', error);
+                
+                if (!document.getElementById('message-modal').classList.contains('hidden')) {
+                     return; 
+                }
+                
+                let displayError = 'Gagal memuat ringkasan. Cek Logs Apps Script Anda.';
+                if (error.message.includes('URL Web App belum diatur')) {
+                    displayError = '⚠️ **URL Web App belum diatur di HTML!**';
+                } else if (error.message.includes('HTTP error! Status: 404')) {
+                    displayError = '⚠️ **ERROR 404:** URL Apps Script salah atau Deployment tidak aktif!';
+                }
+                
                 summaryBodyEl.innerHTML = `
                     <tr>
                         <td colspan="3" class="text-center py-4 text-red-600 font-medium">
-                            Gagal memuat ringkasan. (Cek Logs GAS Anda!) <br/> (${error.message})
+                            ${displayError} <br/> 
+                            <span class="text-xs">(${error.message.split(':').slice(-1)[0].trim()})</span>
                         </td>
                     </tr>
                 `;
                 grandTotalChannelEl.textContent = formatRupiah(0);
                 grandTotalProfitEl.textContent = formatRupiah(0);
+                debugLastRequestEl.textContent = `FAILED (${error.message})`;
             }
         }
 
         function renderSummaryTable(summaryData, date) {
             let rowsHtml = '';
-            let grandTotalChannel = 0;
-            let grandTotalProfit = 0;
+            
+            // Ambil GrandTotal dari data
+            const grandTotalData = summaryData.GrandTotal || { totalHargaChannel: 'Rp 0', totalKeuntungan: 'Rp 0' };
+            const grandTotalChannel = parseRupiahToNumber(grandTotalData.totalHargaChannel);
+            const grandTotalProfit = parseRupiahToNumber(grandTotalData.totalKeuntungan);
+
 
             const channels = ['Flip', 'Gopay', 'Buku Agen', 'QRIS'];
 
             for (const channel of channels) {
-                // Data mungkin sudah diformat Rupiah dari Apps Script, jadi kita parsing lagi untuk total global
-                const data = summaryData[channel] || { totalHargaChannel: 'Rp 0', totalKeuntungan: 'Rp 0' };
+                const data = summaryData[channel];
+                if (!data) continue;
                 
-                // Gunakan parseRupiahToNumber untuk akumulasi total global
                 const totalChannel = parseRupiahToNumber(data.totalHargaChannel);
                 const totalProfit = parseRupiahToNumber(data.totalKeuntungan);
 
-                grandTotalChannel += totalChannel;
-                grandTotalProfit += totalProfit;
+                // Hanya tampilkan baris yang memiliki transaksi
+                if (totalChannel === 0 && totalProfit === 0) continue;
 
-                // Tampilkan data yang sudah diformat dari Apps Script (atau default 'Rp 0')
+
                 rowsHtml += `
                     <tr class="hover:bg-gray-100">
                         <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900">${channel}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-right text-gray-800">${data.totalHargaChannel || formatRupiah(0)}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-right font-bold ${totalProfit >= 0 ? 'text-green-600' : 'text-red-600'}">${data.totalKeuntungan || formatRupiah(0)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-gray-800">${formatRupiah(totalChannel)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right font-bold ${totalProfit >= 0 ? 'text-green-600' : 'text-red-600'}">${formatRupiah(totalProfit)}</td>
                     </tr>
                 `;
             }
 
             if (!rowsHtml) {
                 rowsHtml = `<tr><td colspan="3" class="text-center py-4 text-gray-500">Tidak ada data transaksi untuk tanggal ${date}.</td></tr>`;
+                debugLastRequestEl.textContent = `SUCCESS (Data Kosong)`;
             }
 
             summaryBodyEl.innerHTML = rowsHtml;
@@ -659,7 +743,6 @@
             channelButtons.forEach(button => {
                 button.addEventListener('click', (e) => {
                     const channel = e.target.dataset.channel;
-                    // Logika toggle: Jika channel yang sama diklik, sembunyikan form
                     if (currentChannel === channel && !formContainerEl.classList.contains('hidden')) {
                         formContainerEl.classList.add('hidden');
                         currentChannel = '';
@@ -670,6 +753,13 @@
                     summaryViewEl.classList.add('hidden');
                 });
             });
+            
+            // Set default date to today
+            const today = new Date().toISOString().split('T')[0];
+            filterDateEl.value = today; 
+            
+            // Tampilkan URL Apps Script di debug panel saat inisialisasi
+            debugUrlEl.textContent = GAS_WEB_APP_URL;
         });
     </script>
 </body>
