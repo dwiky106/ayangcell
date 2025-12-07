@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Transaksi Agen</title>
+    <title>Dashboard Input Transaksi</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Konfigurasi Font Inter -->
@@ -94,29 +94,38 @@
             font-size: 0.8rem;
             word-break: break-all;
         }
+        .error-placeholder {
+            border: 3px solid #f87171; /* red-400 */
+            background-color: #fee2e2; /* red-100 */
+            padding: 1rem;
+            border-radius: 0.5rem;
+            font-weight: bold;
+            color: #b91c1c; /* red-700 */
+            text-align: center;
+            margin-bottom: 1rem;
+        }
     </style>
 </head>
-<body class="p-4 sm:p-8">
+<body>
 
     <div class="max-w-4xl mx-auto bg-white p-6 sm:p-10 rounded-3xl shadow-2xl">
         
+        <!-- PENGINGAT URL APPS SCRIPT -->
+        <div id="url-error-reminder" class="error-placeholder" style="display:none;">
+            🚨 **PERINGATAN PENTING:** Silakan atur `GAS_WEB_APP_URL` di kode Anda! Semua fungsi data akan gagal.
+        </div>
+
         <!-- HEADER -->
         <h1 id="greeting" class="text-3xl font-bold mb-2 text-indigo-700">Selamat [Waktu] 👋</h1>
-        <p class="text-gray-500 mb-8">Pilih Channel Transaksi atau Lihat Ringkasan Harian.</p>
+        <p class="text-gray-500 mb-8">Pilih Channel Transaksi atau Hapus Data Hutang.</p>
         
-        <!-- CHANNEL SELECTION & SUMMARY BUTTONS -->
+        <!-- CHANNEL SELECTION & DEBT BUTTON -->
         <div class="flex flex-wrap gap-4 mb-10 border-b pb-6">
             <button data-channel="Flip" class="channel-btn px-6 py-3 rounded-xl font-semibold shadow-md">Flip</button>
             <button data-channel="Gopay" class="channel-btn px-6 py-3 rounded-xl font-semibold shadow-md">Gopay</button>
             <button data-channel="Buku Agen" class="channel-btn px-6 py-3 rounded-xl font-semibold shadow-md">Buku Agen</button>
             <button data-channel="QRIS" class="channel-btn px-6 py-3 rounded-xl font-semibold shadow-md">QRIS</button>
-            <button id="debt-btn" class="px-6 py-3 rounded-xl font-semibold bg-rose-600 text-white shadow-lg hover:bg-rose-700 transition duration-150">Hapus Hutang</button>
-            <button id="summary-btn" class="px-6 py-3 rounded-xl font-semibold bg-green-600 text-white shadow-lg hover:bg-green-700 transition duration-150 ml-auto">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline mr-2" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M3 3a1 1 0 000 2v10a1 1 0 000 2h14a1 1 0 000-2V5a1 1 0 000-2H3zm1 3v7h12V6H4zm1 1h2v1H5V7zm3 0h4v1H8V7zm5 0h2v1h-2V7z" clip-rule="evenodd" />
-                </svg>
-                Lihat Ringkasan
-            </button>
+            <button id="debt-btn" class="px-6 py-3 rounded-xl font-semibold bg-rose-600 text-white shadow-lg hover:bg-rose-700 transition duration-150 ml-auto">Hapus Hutang</button>
         </div>
 
         <!-- TRANSACTION FORM VIEW -->
@@ -145,69 +154,17 @@
             </form>
         </div>
 
-        <!-- SUMMARY VIEW -->
-        <div id="summary-view" class="hidden">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold text-green-700">Ringkasan Keuntungan Harian</h2>
-                <button id="back-to-form-btn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition duration-150">
-                    &larr; Kembali ke Input
-                </button>
-            </div>
-
-            <!-- Filter Tanggal -->
-            <div class="mb-6 flex flex-wrap items-center space-y-2 sm:space-y-0 sm:space-x-4">
-                <label for="filter-date" class="font-medium text-gray-700">Pilih Tanggal:</label>
-                <input type="date" id="filter-date" class="form-input w-full sm:w-48" required>
-                <button id="apply-filter-btn" class="w-full sm:w-auto px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition duration-150">
-                    Terapkan Filter
-                </button>
-            </div>
-
-            <!-- Ringkasan Global -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-                <div class="p-5 bg-indigo-50 rounded-xl shadow-md border-b-4 border-indigo-500">
-                    <p class="text-sm text-gray-500 font-medium">Grand Total Channel (Modal)</p>
-                    <p id="grand-total-channel" class="text-2xl font-extrabold text-indigo-800 mt-1">Memuat...</p>
-                </div>
-                <div class="p-5 bg-green-50 rounded-xl shadow-md border-b-4 border-green-500">
-                    <p class="text-sm text-gray-500 font-medium">Grand Total Keuntungan (Profit)</p>
-                    <p id="grand-total-profit" class="text-2xl font-extrabold text-green-800 mt-1">Memuat...</p>
-                </div>
-            </div>
-
-            <!-- Tabel Ringkasan per Channel -->
-            <div class="overflow-x-auto shadow-lg rounded-xl">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-indigo-50">
-                        <tr>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Channel
-                            </th>
-                            <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Total Harga Channel
-                            </th>
-                            <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Total Keuntungan
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody id="summary-body" class="bg-white divide-y divide-gray-200">
-                        <tr><td colspan="3" class="text-center py-4 text-gray-500">Memuat data ringkasan...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-            
-            <!-- DEBUG PANEL BARU -->
-            <div id="debug-info" class="debug-panel mt-6">
-                <p class="font-bold text-sm mb-1">🔍 Kalo ada error kasih tau mas dwiky ya Sayang:</p>
-                <p><strong>Checking Kode Error:</strong> <span id="debug-url"></span></p>
-                <p><strong>Permintaan Terakhir:</strong> <span id="debug-last-request">N/A</span></p>
-            </div>
+        <!-- DEBUG PANEL HANYA UNTUK LOG FETCH (Opsional, dihapus jika sudah stabil) -->
+        <div id="debug-info" class="debug-panel mt-6">
+            <p class="font-bold text-sm mb-1">🔍 Data Debug:</p>
+            <p><strong>URL Apps Script:</strong> <span id="debug-url"></span></p>
+            <p><strong>Permintaan Terakhir:</strong> <span id="debug-last-request">N/A</span></p>
+            <p><strong>Respon Data Mentah:</strong> <span id="debug-raw-data">N/A</span></p>
         </div>
 
     </div>
 
-    <!-- MODAL -->
+    <!-- MODAL PESAN UMUM -->
     <div id="message-modal" class="modal-backdrop hidden">
         <div class="bg-white p-8 rounded-xl shadow-2xl max-w-sm w-full transform transition-all scale-100 opacity-100">
             <div class="flex justify-between items-center border-b pb-3 mb-4">
@@ -223,53 +180,87 @@
         </div>
     </div>
 
+    <!-- MODAL HAPUS HUTANG -->
     <div id="debt-modal" class="modal-backdrop hidden">
-  <div class="bg-white p-8 rounded-xl shadow-2xl max-w-2xl w-full">
-    <div class="flex justify-between items-center border-b pb-3 mb-4">
-      <h3 class="text-xl font-bold text-indigo-600">Hapus Hutang</h3>
-      <button id="debt-modal-close" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
-    </div>
+        <div class="bg-white p-8 rounded-xl shadow-2xl max-w-3xl w-full">
+            <div class="flex justify-between items-center border-b pb-3 mb-4">
+                <h3 class="text-xl font-bold text-indigo-600">Hapus Hutang (Lunas/Bayar Sebagian)</h3>
+                <button id="debt-modal-close" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+            </div>
 
-    <div class="grid gap-4">
-      <div class="form-group">
-        <label class="form-label">Cari Hutang Berdasarkan Identitas (Nama / No HP / No Rekening)</label>
-        <input id="debt-identitas" class="form-input" placeholder="contoh: Ayangkuprengatprengut" />
-      </div>
+            <div class="grid gap-4">
+                <div class="form-group">
+                    <label class="form-label">Cari Hutang Berdasarkan Identitas (Nama / No HP / No Rekening)</label>
+                    <input id="debt-identitas" class="form-input" placeholder="contoh: Budi / 08123... / 1234567890" />
+                </div>
 
-      <div class="flex flex-col sm:flex-row gap-3 items-end">
-        <div class="form-group flex-1">
-          <label class="form-label">Tanggal Hutang</label>
-          <input id="debt-date" type="date" class="form-input" />
+                <div class="flex flex-col sm:flex-row gap-3 items-end">
+                    <div class="form-group flex-1 w-full">
+                        <label class="form-label">Tanggal Hutang</label>
+                        <input id="debt-date" type="date" class="form-input" />
+                    </div>
+                    <button id="debt-search-btn" class="px-5 py-3 w-full sm:w-auto bg-indigo-600 text-white rounded-xl hover:bg-indigo-700">
+                        Cari
+                    </button>
+                </div>
+
+                <div class="overflow-x-auto rounded-xl border">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-indigo-50">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase">Identitas & Tanggal</th>
+                                <th class="px-4 py-3 text-right text-xs font-medium text-gray-600 uppercase">Nominal Hutang</th>
+                                <th class="px-4 py-3 text-center text-xs font-medium text-gray-600 uppercase">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="debt-results">
+                            <tr><td colspan="3" class="py-4 text-center text-gray-500">Belum ada hasil (silakan cari).</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
-        <button id="debt-search-btn" class="px-5 py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700">
-          Cari
-        </button>
-      </div>
-
-      <div class="overflow-x-auto rounded-xl border">
-        <table class="min-w-full divide-y divide-gray-200">
-          <thead class="bg-indigo-50">
-            <tr>
-              <th class="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase">Identitas</th>
-              <th class="px-4 py-3 text-right text-xs font-medium text-gray-600 uppercase">Nominal Hutang</th>
-              <th class="px-4 py-3 text-center text-xs font-medium text-gray-600 uppercase">Aksi</th>
-            </tr>
-          </thead>
-          <tbody id="debt-results">
-            <tr><td colspan="3" class="py-4 text-center text-gray-500">Ngga nemu yangg (Ayo cari).</td></tr>
-          </tbody>
-        </table>
-      </div>
     </div>
-  </div>
-</div>
+    
+    <!-- MODAL PEMBAYARAN SEBAGIAN (BARU) -->
+    <div id="partial-payment-modal" class="modal-backdrop hidden">
+        <div class="bg-white p-8 rounded-xl shadow-2xl max-w-sm w-full">
+            <div class="flex justify-between items-center border-b pb-3 mb-4">
+                <h3 class="text-xl font-bold text-green-600">Pembayaran Sebagian</h3>
+                <button id="partial-modal-close" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+            </div>
+            
+            <p class="text-sm text-gray-600 mb-4">Membayar hutang atas nama: <strong id="partial-identitas-text"></strong></p>
+            <p class="text-sm text-gray-600 mb-6">Sisa hutang: <strong id="partial-nominal-text" class="text-rose-600"></strong></p>
+
+            <form id="partial-payment-form">
+                <input type="hidden" id="partial-debt-id">
+                <input type="hidden" id="partial-debt-identitas">
+                <input type="hidden" id="partial-debt-nominal">
+                <input type="hidden" id="partial-debt-tanggal">
+
+                <div class="form-group">
+                    <label for="partial-amount" class="form-label text-green-600">Nominal Dibayar</label>
+                    <input type="text" id="partial-amount" name="partial-amount" class="form-input text-green-700 font-bold text-xl" 
+                        placeholder="Contoh: 50000" 
+                        oninput="this.value = this.value.replace(/[^0-9]/g, '');" required>
+                </div>
+
+                <div class="mt-8 pt-4 border-t flex justify-end">
+                    <button type="submit" id="partial-submit-btn" class="px-6 py-3 bg-green-600 text-white font-bold rounded-xl shadow-lg hover:bg-green-700 transition duration-150">
+                        <span id="partial-submit-text">Kirim Pembayaran</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 
 
     <script>
         // =========================================================================
         // >>>>>>>>>>>>>>>> URL WEB APP GAS BARU ANDA <<<<<<<<<<<<<<<
-        // PASTI KAN INI ADALAH URL DARI DEPLOYMENT TERBARU ANDA
-        const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzpdBqr5F-zzOUHanyp5C2CcRaT5zZWSMY5xSCJQe2xuNnw7F3mM2yBWm0A9ZM92CToLA/exec'; 
+        // Pastikan URL di sini sudah diganti dan bukan lagi placeholder!
+        const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwvNgT5TFgvKjyhmZvzUIjwLjFClqbT8KtlBYnPWy2j33iKXbQCD2KTUfqhNMvcJm2biQ/exec'; 
         // --------------------------------------------------------------------------------------------------
 
         const CHANNELS = {
@@ -295,46 +286,55 @@
         let currentChannel = '';
 
         // --- DOM ELEMENTS ---
-        const greetingEl = document.getElementById('greeting');
-        const formContainerEl = document.getElementById('form-container');
-        const formTitleSpanEl = document.getElementById('form-title-span');
-        const dynamicFieldsEl = document.getElementById('dynamic-fields'); 
-        const transactionFormEl = document.getElementById('transaction-form');
-        const submitBtnEl = document.getElementById('submit-btn');
-        const inputSheetNameEl = document.getElementById('input-sheetName');
-        const inputChannelEl = document.getElementById('input-channel');
-        const inputTimestampEl = document.getElementById('input-timestamp');
-        
-        const summaryBtnEl = document.getElementById('summary-btn');
-        const summaryViewEl = document.getElementById('summary-view');
-        const applyFilterBtnEl = document.getElementById('apply-filter-btn');
-        const filterDateEl = document.getElementById('filter-date');
-        const summaryBodyEl = document.getElementById('summary-body');
-        const backToFormBtnEl = document.getElementById('back-to-form-btn');
-        const grandTotalChannelEl = document.getElementById('grand-total-channel');
-        const grandTotalProfitEl = document.getElementById('grand-total-profit');
-        const channelButtons = document.querySelectorAll('.channel-btn');
+        let greetingEl;
+        let formContainerEl;
+        let formTitleSpanEl;
+        let dynamicFieldsEl; 
+        let transactionFormEl;
+        let submitBtnEl;
+        let inputSheetNameEl;
+        let inputChannelEl;
+        let inputTimestampEl;
+        let channelButtons;
+        let urlErrorReminderEl;
+
 
         // --- DEBUG ELEMENTS ---
-        const debugUrlEl = document.getElementById('debug-url');
-        const debugLastRequestEl = document.getElementById('debug-last-request');
+        let debugUrlEl;
+        let debugLastRequestEl;
+        let debugRawDataEl; 
 
         // --- MODAL ELEMENTS ---
-        const modalEl = document.getElementById('message-modal');
-        const modalTitleEl = document.getElementById('modal-title');
-        const modalContentEl = document.getElementById('modal-content');
-        const modalCloseBtnEl = document.getElementById('modal-close-btn');
-        const modalCloseBtnFooterEl = document.getElementById('modal-close-btn-footer');
+        let modalEl;
+        let modalTitleEl;
+        let modalContentEl;
+        let modalCloseBtnEl;
+        let modalCloseBtnFooterEl;
 
-        // --- DEBT MODAL ELEMENTS (Dideklarasikan SEKALI di sini) ---
-        const debtBtnEl = document.getElementById('debt-btn');
-        const debtModalEl = document.getElementById('debt-modal');
-        const debtModalCloseEl = document.getElementById('debt-modal-close');
-        const debtSearchBtnEl = document.getElementById('debt-search-btn');
-        const debtIdentitasEl = document.getElementById('debt-identitas');
-        const debtDateEl = document.getElementById('debt-date');
-        const debtResultsEl = document.getElementById('debt-results');
+        // --- DEBT MODAL ELEMENTS ---
+        let debtBtnEl;
+        let debtModalEl;
+        let debtModalCloseEl;
+        let debtSearchBtnEl;
+        let debtIdentitasEl;
+        let debtDateEl;
+        let debtResultsEl;
         
+        // --- PARTIAL PAYMENT MODAL ELEMENTS ---
+        let partialPaymentModalEl;
+        let partialModalCloseEl;
+        let partialPaymentFormEl;
+        let partialIdentitasTextEl;
+        let partialNominalTextEl;
+        let partialDebtIdEl;
+        let partialDebtIdentitasEl;
+        let partialDebtNominalEl;
+        let partialDebtTanggalEl;
+        let partialAmountEl;
+        let partialSubmitBtnEl;
+        let partialSubmitTextEl;
+
+
         // --- HELPER FUNCTIONS ---
 
         function showModal(title, content, isError = false) {
@@ -348,15 +348,22 @@
         function hideModal() {
             modalEl.classList.add('hidden');
         }
-        modalCloseBtnEl.addEventListener('click', hideModal);
-        modalCloseBtnFooterEl.addEventListener('click', hideModal); 
-
-        function setButtonLoading(isLoading) {
-            submitBtnEl.disabled = isLoading;
+       
+        function setButtonLoading(isLoading, buttonEl = submitBtnEl, loadingText = 'Mengirim...', defaultText = 'Kirim Data') {
+            buttonEl.disabled = isLoading;
             if (isLoading) {
-                submitBtnEl.innerHTML = '<span class="spinner"></span> Mengirim...';
+                buttonEl.innerHTML = `<span class="spinner"></span> ${loadingText}`;
             } else {
-                submitBtnEl.innerHTML = 'Kirim Data';
+                buttonEl.innerHTML = defaultText;
+            }
+        }
+        
+        function setPartialSubmitLoading(isLoading) {
+             partialSubmitBtnEl.disabled = isLoading;
+            if (isLoading) {
+                partialSubmitTextEl.innerHTML = '<span class="spinner"></span> Memproses...';
+            } else {
+                partialSubmitTextEl.innerHTML = 'Kirim Pembayaran';
             }
         }
 
@@ -372,7 +379,9 @@
             } else {
                 greeting += 'Malam'; 
             }
-            greetingEl.textContent = `${greeting} Ayangg 👋`;
+            if (greetingEl) {
+                greetingEl.textContent = `${greeting} Ayangg 👋`;
+            }
         }
 
         function createNumberInput(id, label) {
@@ -409,24 +418,8 @@
                 </div>
             `;
         }
-
-        /**
-         * @description Mengubah string Rupiah menjadi nilai numerik yang bersih.
-         */
-        function parseRupiahToNumber(value) {
-            if (typeof value === 'number') return value;
-            if (typeof value === 'string') {
-                let cleanedValue = value.toString().replace(/[^0-9-]/g, '');
-                
-                // Menghapus tanda minus yang berlebihan (hanya yang pertama yang diizinkan)
-                const number = parseInt(cleanedValue.trim(), 10);
-                
-                return isNaN(number) ? 0 : number; 
-            }
-            return 0;
-        }
-
-
+        
+        // Fungsi formatRupiah tetap dipertahankan
         function formatRupiah(number) {
             if (isNaN(number)) number = 0;
             
@@ -436,23 +429,34 @@
                 minimumFractionDigits: 0
             }).format(number);
         }
+        
+        // Fungsi parseRupiahToNumber untuk Debt Search tetap dipertahankan
+        function parseRupiahToNumber(value) {
+            if (typeof value === 'number') return value;
+            if (typeof value === 'string') {
+                let cleanedValue = value.toString().replace(/[^0-9-]/g, '');
+                const number = parseInt(cleanedValue.trim(), 10);
+                return isNaN(number) ? 0 : number; 
+            }
+            return 0;
+        }
 
-        // --- RETRY MECHANISM (Hanya untuk GET Summary) ---
+        // --- RETRY MECHANISM (Digunakan untuk Debt Search & Set Lunas) ---
         async function fetchWithRetry(url, options, maxRetries = 3) {
+            if (GAS_WEB_APP_URL === 'GANTI_DENGAN_URL_WEB_APP_APPS_SCRIPT_ANDA' || GAS_WEB_APP_URL.trim() === '') {
+                 throw new Error("ERROR: URL Web App belum diatur di dashboard_transaksi_agen.html.");
+            }
+            
             for (let i = 0; i < maxRetries; i++) {
                 try {
-                    if (GAS_WEB_APP_URL === 'GANTI_DENGAN_URL_WEB_APP_APPS_SCRIPT_ANDA') {
-                         throw new Error("ERROR: URL Web App belum diatur di dashboard_transaksi_agen.html.");
-                    }
                     const response = await fetch(url, options);
+                    
                     if (!response.ok) {
-                          try {
-                             // Coba parse respons JSON untuk error Apps Script
-                             const errorData = await response.json();
-                             if (errorData.error) throw new Error(errorData.error);
-                          } catch (jsonError) {
-                             throw new Error(`HTTP error! Status: ${response.status}`);
-                          }
+                        if (response.headers.get('content-type')?.includes('application/json')) {
+                            const errorData = await response.json();
+                            if (errorData.error) throw new Error(errorData.error);
+                        }
+                        throw new Error(`HTTP error! Status: ${response.status}`);
                     }
                     return response; 
                 } catch (error) {
@@ -471,7 +475,6 @@
             currentChannel = channel;
             formTitleSpanEl.textContent = channel;
             formContainerEl.classList.remove('hidden');
-            summaryViewEl.classList.add('hidden');
             
             // Set hidden inputs
             inputSheetNameEl.value = CHANNELS[channel].sheetName;
@@ -482,7 +485,6 @@
             let html = '';
 
             // BARIS 1: IDENTITAS & PRODUK
-            // **PENTING: Urutan penambahan elemen form di HTML ini akan menentukan urutan data yang dikirim!**
             
             // Kolom D: Nama User/Identitas
             html += createTextInput('identitas', 'Nama User/Identitas', 'Masukkan nama pelanggan (boleh angka dan huruf)'); 
@@ -542,7 +544,6 @@
                 if (ewalletPlaceholder) {
                     ewalletPlaceholder.innerHTML = '';
                     ewalletPlaceholder.classList.add('hidden');
-                    // Jika field ewallet ada, pastikan tidak required jika disembunyikan
                     if (ewalletInput) ewalletInput.removeAttribute('required');
                 }
             }
@@ -554,7 +555,6 @@
 
             if (status === 'Terhutang') {
                 if (terhutangPlaceholder) {
-                    // Gunakan ID unik untuk input Terhutang agar terdaftar di FormData
                     terhutangPlaceholder.innerHTML = createNumberInput('jumlahTerhutang', 'Jumlah Terhutang (Kolom K)');
                     
                     const numInput = document.getElementById('jumlahTerhutang');
@@ -574,428 +574,408 @@
         }
 
 
-        // --- FORM SUBMISSION (Menggunakan FETCH API) ---
+        // ============================
+        // DEBT (HAPUS / PEMBAYARAN HUTANG)
+        // ============================
 
-        transactionFormEl.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            if (GAS_WEB_APP_URL === 'GANTI_DENGAN_URL_WEB_APP_APPS_SCRIPT_ANDA') {
-                showModal('ERROR PENTING', '<p class="text-red-600 font-semibold">URL Web App Apps Script belum diatur!</p><p class="text-sm mt-2">Silakan ganti placeholder **GAS_WEB_APP_URL** di kode HTML dengan URL Web App Anda yang valid.</p>', true);
+        function openDebtModal() {
+            debtModalEl.classList.remove('hidden');
+            if (!debtDateEl.value) debtDateEl.value = new Date().toISOString().split('T')[0];
+        }
+
+        function closeDebtModal() {
+            debtModalEl.classList.add('hidden');
+        }
+        
+        function getButtonContext(btn) {
+            return {
+                debtId: btn.dataset.debtId,
+                identitas: btn.dataset.identitas || "",
+                tanggal: btn.dataset.tanggal || "",
+                nominal: parseRupiahToNumber(btn.dataset.nominal || 0)
+            };
+        }
+
+
+        async function searchDebt() {
+            const ident = (debtIdentitasEl.value || '').trim();
+            const date = debtDateEl.value;
+
+            if (!ident) {
+                showModal('Form Tidak Lengkap', '<p class="text-yellow-600 font-semibold">Isi identitas terlebih dahulu.</p>');
                 return;
             }
+
+            debtResultsEl.innerHTML = `
+                <tr><td colspan="3" class="py-4 text-center text-gray-500">Mencari...</td></tr>
+            `;
             
-            if (!transactionFormEl.checkValidity()) {
-                showModal('Validasi Data', '<p class="text-yellow-600 font-semibold">Mohon lengkapi semua field yang diperlukan!</p>', false);
-                return;
-            }
-
-            setButtonLoading(true);
-
-            // 1. Ambil data form
-            const formData = new FormData(transactionFormEl);
-
-            // 2. Bersihkan input numerik dan pastikan hanya angka (atau string kosong jika kosong)
-            const numberInputs = ['hargaChannel', 'hargaJual', 'cashDiterimaAgen', 'onlineMasuk', 'jumlahTerhutang'];
-            for (const key of numberInputs) {
-                let value = formData.get(key) || '';
-                // Hapus semua karakter kecuali angka dan minus, lalu simpan kembali
-                value = value.toString().replace(/[^0-9-]/g, '');
-                formData.set(key, value); 
-            }
-
-            // 3. Tambahkan Timestamp dan pastikan field hidden terisi
-            const timestamp = new Date().toLocaleString('id-ID', {
-                timeZone: 'Asia/Jakarta',
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit'
-            });
-            formData.set('timestamp', timestamp);
-
-            
-            // 4. Kirim data menggunakan fetch API (POST)
-            try {
-                const response = await fetchWithRetry(GAS_WEB_APP_URL, {
-                    method: 'POST',
-                    // Gunakan FormData langsung, Apps Script akan membacanya sebagai e.parameter
-                    body: formData 
-                });
-                
-                // Apps Script merespons dalam bentuk JSON
-                const result = await response.json();
-
-                if (result.status === "SUCCESS") {
-                    showModal('Status Pengiriman Data', `<p class="text-green-600 font-semibold">Data transaksi <b>(${currentChannel})</b> berhasil dikirim.</p>`);
-                    
-                    // --- RESET UI SETELAN SUKSES ---
-                    transactionFormEl.reset();
-                    document.getElementById('ewallet-dropdown-placeholder')?.classList.add('hidden');
-                    document.getElementById('terhutang-input-placeholder')?.classList.add('hidden');
-                    formContainerEl.classList.add('hidden');
-                    channelButtons.forEach(btn => btn.classList.remove('active'));
-
-                } else {
-                    // Jika status ERROR dari Apps Script
-                    throw new Error(result.error || "Gagal Kirim Data: Respon Apps Script tidak sesuai.");
-                }
-
-            } catch (error) {
-                 console.error('Error saat submit data:', error);
-                 let displayError = error.message || "Terjadi error saat mengirim data ke Apps Script.";
-                 
-                 // Handle error spesifik dari GAS
-                 if (displayError.includes('Spreadsheet ID')) {
-                     displayError = 'ERROR: ID Spreadsheet salah atau belum diatur di Kode.gs.';
-                 } else if (displayError.includes('Sheet dengan nama')) {
-                     displayError = `ERROR: Sheet '${currentChannel}' tidak ditemukan di Spreadsheet.`;
-                 }
-
-                 showModal('Gagal Kirim Data', `<p class="text-red-600 font-semibold">${displayError}</p>`, true);
-            } finally {
-                setButtonLoading(false);
-            }
-        });
-
-
-        // --- SUMMARY VIEW LOGIC (Menggunakan Fetch) ---
-
-        summaryBtnEl.addEventListener('click', () => {
-            formContainerEl.classList.add('hidden');
-            summaryViewEl.classList.remove('hidden');
-            channelButtons.forEach(btn => btn.classList.remove('active'));
-
-            if (!filterDateEl.value) {
-                const today = new Date().toISOString().split('T')[0];
-                filterDateEl.value = today; 
-            }
-            loadSummaryData();
-        });
-
-        backToFormBtnEl.addEventListener('click', () => {
-            formContainerEl.classList.remove('hidden');
-            summaryViewEl.classList.add('hidden');
-        });
-
-        applyFilterBtnEl.addEventListener('click', loadSummaryData);
-
-
-        async function loadSummaryData() {
-            summaryBodyEl.innerHTML = `<tr><td colspan="3" class="text-center py-4 text-gray-500">Memuat data ringkasan...</td></tr>`;
-            grandTotalChannelEl.textContent = 'Memuat...';
-            grandTotalProfitEl.textContent = 'Memuat...';
-            debugLastRequestEl.textContent = 'Mengirim Permintaan...';
-
-            const selectedDate = filterDateEl.value; 
-            if (!selectedDate) {
-                summaryBodyEl.innerHTML = `<tr><td colspan="3" class="text-center py-4 text-red-500">Pilih tanggal terlebih dahulu!</td></tr>`;
-                return;
-            }
-            
-            const apiUrl = `${GAS_WEB_APP_URL}?action=getSummary&date=${selectedDate}`;
-            debugUrlEl.textContent = GAS_WEB_APP_URL;
-            debugLastRequestEl.textContent = `GET: ${apiUrl}`;
-
+            debugLastRequestEl.textContent = `GET: searchDebt (Identitas: ${ident}, Tanggal: ${date})`;
+            debugRawDataEl.textContent = 'N/A';
 
             try {
-                const response = await fetchWithRetry(apiUrl, { method: 'GET' });
+                const url = `${GAS_WEB_APP_URL}?action=searchDebt&identitas=${encodeURIComponent(ident)}${date ? '&date=' + encodeURIComponent(date) : ''}`;
+                const res = await fetchWithRetry(url, { method: 'GET' });
                 
-                const data = await response.json();
-                
-                if (data.error) {
-                    const errorMessage = data.error.includes('URL Web App belum diatur') ? 
-                        '⚠️ URL Web App belum diatur di HTML!' : 
-                        'Gagal memuat. Cek Logs GET Apps Script Anda.';
-                    
-                    showModal('Error Memuat Ringkasan', `<p class="text-red-600 font-semibold">${errorMessage}</p><p class="text-sm mt-2 text-gray-500">Detail: ${data.error}</p>`, true);
-                    throw new Error(data.error);
-                }
-
-                renderSummaryTable(data, selectedDate);
-                debugLastRequestEl.textContent = `SUCCESS (Data Ditemukan)`;
-
-
-            } catch (error) {
-                console.error('Error memuat data ringkasan:', error);
-                
-                if (!document.getElementById('message-modal').classList.contains('hidden')) {
-                     return; 
+                let data;
+                try {
+                    data = await res.json();
+                } catch (e) {
+                     const rawText = await res.text();
+                     throw new Error(`Respon server bukan JSON (Debt Search Gagal). Respon mentah: ${rawText.substring(0, 200)}...`);
                 }
                 
-                let displayError = 'Gagal memuat ringkasan. Cek Logs Apps Script Anda.';
-                if (error.message.includes('URL Web App belum diatur')) {
-                    displayError = '⚠️ **URL Web App belum diatur di HTML!**';
-                } else if (error.message.includes('HTTP error! Status: 404')) {
-                    displayError = '⚠️ **ERROR 404:** URL Apps Script salah atau Deployment tidak aktif!';
+                debugRawDataEl.textContent = JSON.stringify(data).substring(0, 300) + '...';
+
+                if (data.status !== "SUCCESS") {
+                    throw new Error(data.error || "Pencarian hutang gagal.");
                 }
-                
-                summaryBodyEl.innerHTML = `
-                    <tr>
-                        <td colspan="3" class="text-center py-4 text-red-600 font-medium">
-                            ${displayError} <br/> 
-                            <span class="text-xs">(${error.message.split(':').slice(-1)[0].trim()})</span>
-                        </td>
-                    </tr>
+
+                renderDebtResults(data.data || []);
+                debugLastRequestEl.textContent = `SUCCESS: searchDebt`;
+            } catch (err) {
+                debtResultsEl.innerHTML = `
+                <tr><td colspan="3" class="py-4 text-center text-red-600 font-semibold">${err.message}</td></tr>
                 `;
-                grandTotalChannelEl.textContent = formatRupiah(0);
-                grandTotalProfitEl.textContent = formatRupiah(0);
-                debugLastRequestEl.textContent = `FAILED (${error.message})`;
+                debugLastRequestEl.textContent = `FAILED: searchDebt (${err.message.substring(0, 50)}...)`;
             }
         }
 
-        function renderSummaryTable(summaryData, date) {
-            let rowsHtml = '';
-            
-            // Ambil GrandTotal dari data
-            const grandTotalData = summaryData.GrandTotal || { totalHargaChannel: 'Rp 0', totalKeuntungan: 'Rp 0' };
-            const grandTotalChannel = parseRupiahToNumber(grandTotalData.totalHargaChannel);
-            const grandTotalProfit = parseRupiahToNumber(grandTotalData.totalKeuntungan);
-
-
-            const channels = ['Flip', 'Gopay', 'Buku Agen', 'QRIS'];
-
-            for (const channel of channels) {
-                const data = summaryData[channel];
-                if (!data) continue;
-                
-                const totalChannel = parseRupiahToNumber(data.totalHargaChannel);
-                const totalProfit = parseRupiahToNumber(data.totalKeuntungan);
-
-                // Hanya tampilkan baris yang memiliki transaksi
-                if (totalChannel === 0 && totalProfit === 0) continue;
-
-
-                rowsHtml += `
-                    <tr class="hover:bg-gray-100">
-                        <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900">${channel}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-right text-gray-800">${formatRupiah(totalChannel)}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-right font-bold ${totalProfit >= 0 ? 'text-green-600' : 'text-red-600'}">${formatRupiah(totalProfit)}</td>
-                    </tr>
-                `;
+        function renderDebtResults(items) {
+            if (!items || items.length === 0) {
+                debtResultsEl.innerHTML =
+                    `<tr><td colspan="3" class="py-4 text-center text-gray-500">Tidak ditemukan hutang.</td></tr>`;
+                return;
             }
 
-            if (!rowsHtml) {
-                rowsHtml = `<tr><td colspan="3" class="text-center py-4 text-gray-500">Tidak ada data transaksi untuk tanggal ${date}.</td></tr>`;
-                debugLastRequestEl.textContent = `SUCCESS (Data Kosong)`;
-            }
-
-            summaryBodyEl.innerHTML = rowsHtml;
-            grandTotalChannelEl.textContent = formatRupiah(grandTotalChannel);
-            grandTotalProfitEl.textContent = formatRupiah(grandTotalProfit);
+            debtResultsEl.innerHTML = items.map(it => `
+                <tr class="hover:bg-gray-50">
+                    <td class="px-4 py-3 text-sm text-gray-900">
+                        ${it.identitas || '-'}
+                        <div class="text-xs text-gray-500 mt-1">Tgl: ${it.tanggal || 'N/A'}</div>
+                    </td>
+                    <td class="px-4 py-3 text-sm text-right font-semibold text-rose-600">
+                        ${formatRupiah(parseRupiahToNumber(it.nominal))}
+                    </td>
+                    <td class="px-4 py-3 text-center">
+                        <div class="flex gap-2 justify-center flex-wrap">
+                            <button class="px-3 py-2 rounded-lg bg-green-500 text-white text-sm hover:bg-green-600"
+                                data-action="partial-pay"
+                                data-debt-id="${it.id}"
+                                data-identitas="${(it.identitas || '').replace(/"/g,'&quot;')}"
+                                data-tanggal="${it.tanggal || ''}"
+                                data-nominal="${it.nominal || 0}">
+                                Bayar Sebagian
+                            </button>
+                            <button class="px-3 py-2 rounded-lg bg-green-700 text-white text-sm hover:bg-green-800"
+                                data-action="set-lunas"
+                                data-debt-id="${it.id}"
+                                data-identitas="${(it.identitas || '').replace(/"/g,'&quot;')}"
+                                data-tanggal="${it.tanggal || ''}">
+                                Set Lunas
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
         }
-
 
         // ============================
-// DEBT (HAPUS / PEMBAYARAN HUTANG)
-// ============================
-
-// Blok deklarasi pertama di atas telah dihapus/dikonsolidasikan ke bagian DOM ELEMENTS
-
-function openDebtModal() {
-  debtModalEl.classList.remove('hidden');
-  // default tanggal hari ini (opsional)
-  if (!debtDateEl.value) debtDateEl.value = new Date().toISOString().split('T')[0];
-}
-
-function closeDebtModal() {
-  debtModalEl.classList.add('hidden');
-}
-
-async function searchDebt() {
-  const ident = (debtIdentitasEl.value || '').trim();
-  const date = debtDateEl.value;
-
-  if (!ident) {
-    showModal('Form Tidak Lengkap', '<p class="text-yellow-600 font-semibold">Isi identitas terlebih dahulu.</p>');
-    return;
-  }
-
-  debtResultsEl.innerHTML = `
-    <tr><td colspan="3" class="py-4 text-center text-gray-500">Mencari...</td></tr>
-  `;
-
-  try {
-    const url = `${GAS_WEB_APP_URL}?action=searchDebt&identitas=${encodeURIComponent(ident)}${date ? '&date=' + encodeURIComponent(date) : ''}`;
-    const res = await fetchWithRetry(url, { method: 'GET' });
-    const data = await res.json();
-
-    if (data.status !== "SUCCESS") {
-      throw new Error(data.error || "Pencarian hutang gagal.");
-    }
-
-    renderDebtResults(data.data || []);
-  } catch (err) {
-    debtResultsEl.innerHTML = `
-      <tr><td colspan="3" class="py-4 text-center text-red-600 font-semibold">${err.message}</td></tr>
-    `;
-  }
-}
-
-// ============================
-// DEBT HANDLING
-// Blok deklarasi kedua telah dihapus karena duplikat
-// ============================
-
-// Fungsi openDebtModal, closeDebtModal, dan searchDebt di atas sudah benar
-
-// ===============
-// Render tabel Debt
-// ===============
-
-function renderDebtResults(items) {
-    if (!items || items.length === 0) {
-        debtResultsEl.innerHTML =
-            `<tr><td colspan="3" class="py-4 text-center text-gray-500">Tidak ditemukan hutang.</td></tr>`;
-        return;
-    }
-
-    debtResultsEl.innerHTML = items.map(it => `
-        <tr class="hover:bg-gray-50">
-            <td class="px-4 py-3 text-sm text-gray-900">${it.identitas || '-'}</td>
-            <td class="px-4 py-3 text-sm text-right font-semibold text-gray-800">
-                ${formatRupiah(parseRupiahToNumber(it.nominal))}
-            </td>
-            <td class="px-4 py-3 text-center">
-                <div class="flex gap-2 justify-center flex-wrap">
-
-                    <button class="px-3 py-2 rounded-lg bg-green-600 text-white text-sm hover:bg-green-700"
-                        data-action="set-lunas"
-                        data-debt-id="${it.id}"
-                        data-identitas="${(it.identitas || '').replace(/"/g,'&quot;')}"
-                        data-tanggal="${it.tanggal || ''}">
-                        Set Lunas
-                    </button>
-
-                    <button class="px-3 py-2 rounded-lg bg-amber-500 text-white text-sm hover:bg-amber-600"
-                        data-action="bayar-sebagian"
-                        data-debt-id="${it.id}"
-                        data-identitas="${(it.identitas || '').replace(/"/g,'&quot;')}"
-                        data-tanggal="${it.tanggal || ''}">
-                        Bayar Sebagian
-                    </button>
-
-                </div>
-            </td>
-        </tr>
-    `).join('');
-}
-
-// ===============
-// Button Delegation
-// ===============
-
-function getButtonContext(btn) {
-    return {
-        debtId: btn.dataset.debtId,
-        identitas: btn.dataset.identitas || "",
-        tanggal: btn.dataset.tanggal || ""
-    };
-}
-
-debtResultsEl.addEventListener('click', async (e) => {
-    const target = e.target.closest("button");
-    if (!target) return;
-
-    const ctx = getButtonContext(target);
-
-    if (target.dataset.action === "set-lunas") {
-        await setLunas(ctx);
-    } else if (target.dataset.action === "bayar-sebagian") {
-        await bayarSebagian(ctx);
-    }
-});
-
-// ===============
-// SET LUNAS
-// ===============
-
-async function setLunas(ctx) {
-    try {
-        const res = await fetchWithRetry(
-            `${GAS_WEB_APP_URL}?action=updateDebt`,
-            {
-                method: "POST",
-                body: new URLSearchParams({
-                    mode: "lunas",
-                    debtId: ctx.debtId,
-                    identitas: ctx.identitas,
-                    date: ctx.tanggal
-                })
-            }
-        );
-
-        const data = await res.json();
-        if (data.status !== "SUCCESS")
-            throw new Error(data.error || "Gagal set lunas.");
-
-        showModal(
-            "Sukses",
-            "<p class='text-green-600 font-semibold'>Hutang berhasil dihapus (set lunas) dan nominalnya dipindah ke Cash Diterima Agen.</p>"
-        );
-
-        await searchDebt();
-
-    } catch (err) {
-        showModal("Gagal", `<p class='text-red-600 font-semibold'>${err.message}</p>`, true);
-    }
-}
-
-// ===============
-// BAYAR SEBAGIAN
-// ===============
-
-async function bayarSebagian(ctx) {
-    const input = prompt("Masukkan nominal bayar (angka):", "");
-    if (input === null) return;
-
-    const pay = parseRupiahToNumber(input);
-    if (!pay || pay <= 0) {
-        showModal("Input tidak valid", "<p class='text-yellow-600 font-semibold'>Nominal harus lebih dari 0.</p>");
-        return;
-    }
-
-    try {
-        const res = await fetchWithRetry(
-            `${GAS_WEB_APP_URL}?action=updateDebt`,
-            {
-                method: "POST",
-                body: new URLSearchParams({
-                    mode: "partial",
-                    debtId: ctx.debtId,
-                    pay: String(pay),
-                    identitas: ctx.identitas,
-                    date: ctx.tanggal
-                })
-            }
-        );
-
-        const data = await res.json();
-        if (data.status !== "SUCCESS")
-            throw new Error(data.error || "Gagal bayar sebagian.");
-
-        showModal(
-            "Sukses",
-            "<p class='text-green-600 font-semibold'>Pembayaran sebagian tersimpan. Cash Diterima Agen bertambah.</p>"
-        );
-
-        await searchDebt();
-
-    } catch (err) {
-        showModal("Gagal", `<p class='text-red-600 font-semibold'>${err.message}</p>`, true);
-    }
-}
-
-// Events
-debtBtnEl?.addEventListener("click", openDebtModal);
-debtModalCloseEl?.addEventListener("click", closeDebtModal);
-debtSearchBtnEl?.addEventListener("click", searchDebt);
-
-        // --- INITIALIZATION ---
-        document.addEventListener('DOMContentLoaded', () => {
-            getGreeting();
+        // LOGIKA SET LUNAS
+        // ============================
+        async function setLunas(ctx) {
+            const button = event.target.closest('button');
+            const originalHtml = button.innerHTML;
             
+            try {
+                button.disabled = true;
+                button.innerHTML = '<span class="spinner"></span> Proses...';
+
+                debugLastRequestEl.textContent = `POST: updateDebt (ID: ${ctx.debtId}, Mode: Lunas)`;
+                debugRawDataEl.textContent = 'Mengirim...';
+
+
+                const res = await fetchWithRetry(
+                    GAS_WEB_APP_URL,
+                    {
+                        method: "POST",
+                        body: new URLSearchParams({
+                            action: "updateDebt", 
+                            mode: "lunas",
+                            debtId: ctx.debtId,
+                            identitas: ctx.identitas,
+                            date: ctx.tanggal
+                        })
+                    }
+                );
+
+                let data;
+                try {
+                    data = await res.json();
+                } catch (e) {
+                     const rawText = await res.text();
+                     throw new Error(`Respon server bukan JSON (Set Lunas Gagal). Respon mentah: ${rawText.substring(0, 200)}...`);
+                }
+
+                debugRawDataEl.textContent = JSON.stringify(data).substring(0, 300) + '...';
+
+                if (data.status !== "SUCCESS")
+                    throw new Error(data.error || "Gagal set lunas. Cek balasan error dari Apps Script.");
+
+                showModal(
+                    "Sukses",
+                    "<p class='text-green-600 font-semibold'>Hutang berhasil dihapus (set lunas) dan nominalnya dipindah ke Cash Diterima Agen.</p>"
+                );
+
+                // Setelah berhasil, muat ulang hasil pencarian hutang
+                await searchDebt();
+
+            } catch (err) {
+                showModal("Gagal", `<p class='text-red-600 font-semibold'>${err.message}</p>`, true);
+            } finally {
+                button.disabled = false;
+                button.innerHTML = originalHtml;
+            }
+        }
+        
+        // ============================
+        // LOGIKA BAYAR SEBAGIAN
+        // ============================
+
+        function openPartialPaymentModal(ctx) {
+            partialDebtIdEl.value = ctx.debtId;
+            partialDebtIdentitasEl.value = ctx.identitas;
+            partialDebtNominalEl.value = ctx.nominal;
+            partialDebtTanggalEl.value = ctx.tanggal;
+
+            partialIdentitasTextEl.textContent = ctx.identitas;
+            partialNominalTextEl.textContent = formatRupiah(ctx.nominal);
+            partialAmountEl.value = ''; // Reset input
+            
+            partialPaymentModalEl.classList.remove('hidden');
+        }
+        
+        function closePartialPaymentModal() {
+            partialPaymentModalEl.classList.add('hidden');
+        }
+
+        async function handlePartialPayment(e) {
+            e.preventDefault();
+            setPartialSubmitLoading(true);
+
+            const ctx = {
+                debtId: partialDebtIdEl.value,
+                identitas: partialDebtIdentitasEl.value,
+                nominalAwal: parseRupiahToNumber(partialDebtNominalEl.value),
+                tanggal: partialDebtTanggalEl.value,
+                nominalBayar: parseRupiahToNumber(partialAmountEl.value)
+            };
+            
+            if (ctx.nominalBayar <= 0) {
+                showModal('Input Tidak Valid', '<p class="text-yellow-600 font-semibold">Nominal yang dibayar harus lebih besar dari 0.</p>');
+                setPartialSubmitLoading(false);
+                return;
+            }
+            
+            if (ctx.nominalBayar > ctx.nominalAwal) {
+                 showModal('Input Tidak Valid', '<p class="text-yellow-600 font-semibold">Nominal yang dibayar tidak boleh melebihi sisa hutang.</p>');
+                setPartialSubmitLoading(false);
+                return;
+            }
+
+
+            try {
+                debugLastRequestEl.textContent = `POST: updateDebt (ID: ${ctx.debtId}, Mode: Partial, Nominal: ${ctx.nominalBayar})`;
+                debugRawDataEl.textContent = 'Mengirim...';
+
+                const res = await fetchWithRetry(
+                    GAS_WEB_APP_URL,
+                    {
+                        method: "POST",
+                        body: new URLSearchParams({
+                            action: "updateDebt", 
+                            mode: "partial",
+                            debtId: ctx.debtId,
+                            identitas: ctx.identitas,
+                            date: ctx.tanggal,
+                            amount: ctx.nominalBayar 
+                        })
+                    }
+                );
+
+                let data;
+                try {
+                    data = await res.json();
+                } catch (e) {
+                     const rawText = await res.text();
+                     throw new Error(`Respon server bukan JSON (Bayar Sebagian Gagal). Respon mentah: ${rawText.substring(0, 200)}...`);
+                }
+
+                debugRawDataEl.textContent = JSON.stringify(data).substring(0, 300) + '...';
+
+                if (data.status !== "SUCCESS")
+                    throw new Error(data.error || "Gagal bayar sebagian. Cek balasan error dari Apps Script.");
+
+                closePartialPaymentModal();
+                showModal(
+                    "Sukses",
+                    `<p class='text-green-600 font-semibold'>Pembayaran sebagian sebesar ${formatRupiah(ctx.nominalBayar)} berhasil dicatat.</p>` +
+                    `<p class='text-sm mt-2'>Sisa hutang terbaru akan terlihat setelah pencarian ulang.</p>`
+                );
+
+                // Muat ulang hasil pencarian hutang
+                await searchDebt();
+
+            } catch (err) {
+                showModal("Gagal", `<p class='text-red-600 font-semibold'>${err.message}</p>`, true);
+            } finally {
+                setPartialSubmitLoading(false);
+            }
+        }
+
+
+        // --- INITIALIZATION (Semua kode yang mengakses DOM dipindahkan ke sini) ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // 1. Inisialisasi semua elemen DOM
+            
+            // --- General Elements ---
+            greetingEl = document.getElementById('greeting');
+            formContainerEl = document.getElementById('form-container');
+            formTitleSpanEl = document.getElementById('form-title-span');
+            dynamicFieldsEl = document.getElementById('dynamic-fields'); 
+            transactionFormEl = document.getElementById('transaction-form');
+            submitBtnEl = document.getElementById('submit-btn');
+            inputSheetNameEl = document.getElementById('input-sheetName');
+            inputChannelEl = document.getElementById('input-channel');
+            inputTimestampEl = document.getElementById('input-timestamp');
+            channelButtons = document.querySelectorAll('.channel-btn');
+            urlErrorReminderEl = document.getElementById('url-error-reminder');
+
+            // --- Debug Elements ---
+            debugUrlEl = document.getElementById('debug-url');
+            debugLastRequestEl = document.getElementById('debug-last-request');
+            debugRawDataEl = document.getElementById('debug-raw-data');
+
+            // --- Modal Elements ---
+            modalEl = document.getElementById('message-modal');
+            modalTitleEl = document.getElementById('modal-title');
+            modalContentEl = document.getElementById('modal-content');
+            modalCloseBtnEl = document.getElementById('modal-close-btn');
+            modalCloseBtnFooterEl = document.getElementById('modal-close-btn-footer');
+
+            // --- Debt Modal Elements ---
+            debtBtnEl = document.getElementById('debt-btn');
+            debtModalEl = document.getElementById('debt-modal');
+            debtModalCloseEl = document.getElementById('debt-modal-close');
+            debtSearchBtnEl = document.getElementById('debt-search-btn');
+            debtIdentitasEl = document.getElementById('debt-identitas');
+            debtDateEl = document.getElementById('debt-date');
+            debtResultsEl = document.getElementById('debt-results');
+            
+            // --- Partial Payment Modal Elements ---
+            partialPaymentModalEl = document.getElementById('partial-payment-modal');
+            partialModalCloseEl = document.getElementById('partial-modal-close');
+            partialPaymentFormEl = document.getElementById('partial-payment-form');
+            partialIdentitasTextEl = document.getElementById('partial-identitas-text');
+            partialNominalTextEl = document.getElementById('partial-nominal-text');
+            partialDebtIdEl = document.getElementById('partial-debt-id');
+            partialDebtIdentitasEl = document.getElementById('partial-debt-identitas');
+            partialDebtNominalEl = document.getElementById('partial-debt-nominal');
+            partialDebtTanggalEl = document.getElementById('partial-debt-tanggal');
+            partialAmountEl = document.getElementById('partial-amount');
+            partialSubmitBtnEl = document.getElementById('partial-submit-btn');
+            partialSubmitTextEl = document.getElementById('partial-submit-text');
+
+
+            // 2. Pasang semua Event Listeners
+
+            // Global Modal Listeners 
+            modalCloseBtnEl.addEventListener('click', hideModal);
+            modalCloseBtnFooterEl.addEventListener('click', hideModal); 
+            
+            // Form Submission Listener 
+            transactionFormEl.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                if (GAS_WEB_APP_URL === 'GANTI_DENGAN_URL_WEB_APP_APPS_SCRIPT_ANDA') {
+                    showModal('ERROR PENTING', '<p class="text-red-600 font-semibold">URL Web App Apps Script belum diatur!</p><p class="text-sm mt-2">Silakan ganti placeholder **GAS_WEB_APP_URL** di kode HTML dengan URL Web App Anda yang valid.</p>', true);
+                    urlErrorReminderEl.style.display = 'block';
+                    return;
+                }
+                
+                if (!transactionFormEl.checkValidity()) {
+                    showModal('Validasi Data', '<p class="text-yellow-600 font-semibold">Mohon lengkapi semua field yang diperlukan!</p>', false);
+                    return;
+                }
+
+                setButtonLoading(true);
+
+                const formData = new FormData(transactionFormEl);
+
+                const numberInputs = ['hargaChannel', 'hargaJual', 'cashDiterimaAgen', 'onlineMasuk', 'jumlahTerhutang'];
+                for (const key of numberInputs) {
+                    let value = formData.get(key) || '';
+                    value = value.toString().replace(/[^0-9-]/g, '');
+                    formData.set(key, value); 
+                }
+
+                const timestamp = new Date().toLocaleString('id-ID', {
+                    timeZone: 'Asia/Jakarta',
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit'
+                });
+                formData.set('timestamp', timestamp);
+                
+                debugLastRequestEl.textContent = `POST: submitData (${currentChannel})`;
+                debugRawDataEl.textContent = 'Mengirim...';
+
+
+                try {
+                    const response = await fetchWithRetry(GAS_WEB_APP_URL, {
+                        method: 'POST',
+                        body: formData 
+                    });
+                    
+                    const result = await response.json();
+                    debugRawDataEl.textContent = JSON.stringify(result).substring(0, 300) + '...';
+
+                    if (result.status === "SUCCESS") {
+                        showModal('Status Pengiriman Data', `<p class="text-green-600 font-semibold">Data transaksi <b>(${currentChannel})</b> berhasil dikirim.</p>`);
+                        
+                        // --- RESET UI SETELAN SUKSES ---
+                        transactionFormEl.reset();
+                        document.getElementById('ewallet-dropdown-placeholder')?.classList.add('hidden');
+                        document.getElementById('terhutang-input-placeholder')?.classList.add('hidden');
+                        formContainerEl.classList.add('hidden');
+                        channelButtons.forEach(btn => btn.classList.remove('active'));
+                        urlErrorReminderEl.style.display = 'none';
+                        debugLastRequestEl.textContent = `SUCCESS: submitData`;
+
+                    } else {
+                        // Jika status ERROR dari Apps Script
+                        throw new Error(result.error || "Gagal Kirim Data: Respon Apps Script tidak sesuai.");
+                    }
+
+                } catch (error) {
+                    console.error('Error saat submit data:', error);
+                    let displayError = error.message || "Terjadi error saat mengirim data ke Apps Script.";
+                    
+                    if (displayError.includes('URL Web App belum diatur')) {
+                        urlErrorReminderEl.style.display = 'block';
+                    }
+
+                    showModal('Gagal Kirim Data', `<p class="text-red-600 font-semibold">${displayError}</p>`, true);
+                    debugLastRequestEl.textContent = `FAILED: submitData (${error.message.substring(0, 50)}...)`;
+                } finally {
+                    setButtonLoading(false);
+                }
+            });
+
+            // Channel Selection Listeners 
             channelButtons.forEach(button => {
                 button.addEventListener('click', (e) => {
                     const channel = e.target.dataset.channel;
@@ -1006,16 +986,51 @@ debtSearchBtnEl?.addEventListener("click", searchDebt);
                     } else {
                         renderForm(channel);
                     }
-                    summaryViewEl.classList.add('hidden');
                 });
             });
+
             
-            // Set default date to today
-            const today = new Date().toISOString().split('T')[0];
-            filterDateEl.value = today; 
+            // Debt Modal Listeners 
+            debtBtnEl.addEventListener("click", openDebtModal);
+            debtModalCloseEl.addEventListener("click", closeDebtModal);
+            debtSearchBtnEl.addEventListener("click", searchDebt);
+
+            // Debt Action Delegation Listener
+            debtResultsEl.addEventListener('click', async (e) => {
+                const target = e.target.closest("button");
+                if (!target) return;
+                
+                const action = target.dataset.action;
+                if (!action) {
+                    console.error("Kesalahan: Tombol tidak memiliki data-action.");
+                    showModal('Error Aksi', '<p class="text-red-600 font-semibold">Tombol aksi tidak valid. Mohon hubungi developer.</p>', true);
+                    return;
+                }
+
+                const ctx = getButtonContext(target);
+
+                if (action === "set-lunas") {
+                    await setLunas(ctx);
+                } else if (action === "partial-pay") {
+                    openPartialPaymentModal(ctx);
+                }
+            });
+            
+            // Partial Payment Modal Listeners
+            partialModalCloseEl.addEventListener('click', closePartialPaymentModal);
+            partialPaymentFormEl.addEventListener('submit', handlePartialPayment);
+
+
+            // 3. Setup Awal
+            getGreeting();
             
             // Tampilkan URL Apps Script di debug panel saat inisialisasi
             debugUrlEl.textContent = GAS_WEB_APP_URL;
+
+            // Tampilkan pengingat jika URL masih placeholder
+            if (GAS_WEB_APP_URL === 'GANTI_DENGAN_URL_WEB_APP_APPS_SCRIPT_ANDA') {
+                urlErrorReminderEl.style.display = 'block';
+            }
         });
     </script>
 </body>
