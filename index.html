@@ -101,15 +101,16 @@
     <div class="max-w-4xl mx-auto bg-white p-6 sm:p-10 rounded-3xl shadow-2xl">
         
         <!-- HEADER -->
-        <h1 id="greeting" class="text-3xl font-bold mb-2 text-indigo-700">Selamat [Waktu] 👋😘😘</h1>
+        <h1 id="greeting" class="text-3xl font-bold mb-2 text-indigo-700">Selamat [Waktu] 👋</h1>
         <p class="text-gray-500 mb-8">Pilih Channel Transaksi atau Lihat Ringkasan Harian.</p>
-
+        
         <!-- CHANNEL SELECTION & SUMMARY BUTTONS -->
         <div class="flex flex-wrap gap-4 mb-10 border-b pb-6">
             <button data-channel="Flip" class="channel-btn px-6 py-3 rounded-xl font-semibold shadow-md">Flip</button>
             <button data-channel="Gopay" class="channel-btn px-6 py-3 rounded-xl font-semibold shadow-md">Gopay</button>
             <button data-channel="Buku Agen" class="channel-btn px-6 py-3 rounded-xl font-semibold shadow-md">Buku Agen</button>
             <button data-channel="QRIS" class="channel-btn px-6 py-3 rounded-xl font-semibold shadow-md">QRIS</button>
+            <button id="debt-btn" class="px-6 py-3 rounded-xl font-semibold bg-rose-600 text-white shadow-lg hover:bg-rose-700 transition duration-150">Hapus Hutang</button>
             <button id="summary-btn" class="px-6 py-3 rounded-xl font-semibold bg-green-600 text-white shadow-lg hover:bg-green-700 transition duration-150 ml-auto">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline mr-2" viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd" d="M3 3a1 1 0 000 2v10a1 1 0 000 2h14a1 1 0 000-2V5a1 1 0 000-2H3zm1 3v7h12V6H4zm1 1h2v1H5V7zm3 0h4v1H8V7zm5 0h2v1h-2V7z" clip-rule="evenodd" />
@@ -222,12 +223,53 @@
         </div>
     </div>
 
+    <div id="debt-modal" class="modal-backdrop hidden">
+  <div class="bg-white p-8 rounded-xl shadow-2xl max-w-2xl w-full">
+    <div class="flex justify-between items-center border-b pb-3 mb-4">
+      <h3 class="text-xl font-bold text-indigo-600">Hapus Hutang</h3>
+      <button id="debt-modal-close" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+    </div>
+
+    <div class="grid gap-4">
+      <div class="form-group">
+        <label class="form-label">Cari Hutang Berdasarkan Identitas (Nama / No HP / No Rekening)</label>
+        <input id="debt-identitas" class="form-input" placeholder="contoh: Ayangkuprengatprengut" />
+      </div>
+
+      <div class="flex flex-col sm:flex-row gap-3 items-end">
+        <div class="form-group flex-1">
+          <label class="form-label">Tanggal Hutang</label>
+          <input id="debt-date" type="date" class="form-input" />
+        </div>
+        <button id="debt-search-btn" class="px-5 py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700">
+          Cari
+        </button>
+      </div>
+
+      <div class="overflow-x-auto rounded-xl border">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-indigo-50">
+            <tr>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase">Identitas</th>
+              <th class="px-4 py-3 text-right text-xs font-medium text-gray-600 uppercase">Nominal Hutang</th>
+              <th class="px-4 py-3 text-center text-xs font-medium text-gray-600 uppercase">Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="debt-results">
+            <tr><td colspan="3" class="py-4 text-center text-gray-500">Ngga nemu yangg (Ayo cari).</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
 
     <script>
         // =========================================================================
         // >>>>>>>>>>>>>>>> URL WEB APP GAS BARU ANDA <<<<<<<<<<<<<<<
         // PASTI KAN INI ADALAH URL DARI DEPLOYMENT TERBARU ANDA
-        const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxySyBrngcBAyB8AOakC3976YwzCSh70ClztiExBgDAxKcUwSuhrDhPMhIPAcyRcaCa8A/exec'; 
+        const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzpdBqr5F-zzOUHanyp5C2CcRaT5zZWSMY5xSCJQe2xuNnw7F3mM2yBWm0A9ZM92CToLA/exec'; 
         // --------------------------------------------------------------------------------------------------
 
         const CHANNELS = {
@@ -284,6 +326,15 @@
         const modalCloseBtnEl = document.getElementById('modal-close-btn');
         const modalCloseBtnFooterEl = document.getElementById('modal-close-btn-footer');
 
+        // --- DEBT MODAL ELEMENTS (Dideklarasikan SEKALI di sini) ---
+        const debtBtnEl = document.getElementById('debt-btn');
+        const debtModalEl = document.getElementById('debt-modal');
+        const debtModalCloseEl = document.getElementById('debt-modal-close');
+        const debtSearchBtnEl = document.getElementById('debt-search-btn');
+        const debtIdentitasEl = document.getElementById('debt-identitas');
+        const debtDateEl = document.getElementById('debt-date');
+        const debtResultsEl = document.getElementById('debt-results');
+        
         // --- HELPER FUNCTIONS ---
 
         function showModal(title, content, isError = false) {
@@ -321,7 +372,7 @@
             } else {
                 greeting += 'Malam'; 
             }
-            greetingEl.textContent = `${greeting} Ayangg 👋😘😘`;
+            greetingEl.textContent = `${greeting} Ayangg 👋`;
         }
 
         function createNumberInput(id, label) {
@@ -735,6 +786,211 @@
             grandTotalProfitEl.textContent = formatRupiah(grandTotalProfit);
         }
 
+
+        // ============================
+// DEBT (HAPUS / PEMBAYARAN HUTANG)
+// ============================
+
+// Blok deklarasi pertama di atas telah dihapus/dikonsolidasikan ke bagian DOM ELEMENTS
+
+function openDebtModal() {
+  debtModalEl.classList.remove('hidden');
+  // default tanggal hari ini (opsional)
+  if (!debtDateEl.value) debtDateEl.value = new Date().toISOString().split('T')[0];
+}
+
+function closeDebtModal() {
+  debtModalEl.classList.add('hidden');
+}
+
+async function searchDebt() {
+  const ident = (debtIdentitasEl.value || '').trim();
+  const date = debtDateEl.value;
+
+  if (!ident) {
+    showModal('Form Tidak Lengkap', '<p class="text-yellow-600 font-semibold">Isi identitas terlebih dahulu.</p>');
+    return;
+  }
+
+  debtResultsEl.innerHTML = `
+    <tr><td colspan="3" class="py-4 text-center text-gray-500">Mencari...</td></tr>
+  `;
+
+  try {
+    const url = `${GAS_WEB_APP_URL}?action=searchDebt&identitas=${encodeURIComponent(ident)}${date ? '&date=' + encodeURIComponent(date) : ''}`;
+    const res = await fetchWithRetry(url, { method: 'GET' });
+    const data = await res.json();
+
+    if (data.status !== "SUCCESS") {
+      throw new Error(data.error || "Pencarian hutang gagal.");
+    }
+
+    renderDebtResults(data.data || []);
+  } catch (err) {
+    debtResultsEl.innerHTML = `
+      <tr><td colspan="3" class="py-4 text-center text-red-600 font-semibold">${err.message}</td></tr>
+    `;
+  }
+}
+
+// ============================
+// DEBT HANDLING
+// Blok deklarasi kedua telah dihapus karena duplikat
+// ============================
+
+// Fungsi openDebtModal, closeDebtModal, dan searchDebt di atas sudah benar
+
+// ===============
+// Render tabel Debt
+// ===============
+
+function renderDebtResults(items) {
+    if (!items || items.length === 0) {
+        debtResultsEl.innerHTML =
+            `<tr><td colspan="3" class="py-4 text-center text-gray-500">Tidak ditemukan hutang.</td></tr>`;
+        return;
+    }
+
+    debtResultsEl.innerHTML = items.map(it => `
+        <tr class="hover:bg-gray-50">
+            <td class="px-4 py-3 text-sm text-gray-900">${it.identitas || '-'}</td>
+            <td class="px-4 py-3 text-sm text-right font-semibold text-gray-800">
+                ${formatRupiah(parseRupiahToNumber(it.nominal))}
+            </td>
+            <td class="px-4 py-3 text-center">
+                <div class="flex gap-2 justify-center flex-wrap">
+
+                    <button class="px-3 py-2 rounded-lg bg-green-600 text-white text-sm hover:bg-green-700"
+                        data-action="set-lunas"
+                        data-debt-id="${it.id}"
+                        data-identitas="${(it.identitas || '').replace(/"/g,'&quot;')}"
+                        data-tanggal="${it.tanggal || ''}">
+                        Set Lunas
+                    </button>
+
+                    <button class="px-3 py-2 rounded-lg bg-amber-500 text-white text-sm hover:bg-amber-600"
+                        data-action="bayar-sebagian"
+                        data-debt-id="${it.id}"
+                        data-identitas="${(it.identitas || '').replace(/"/g,'&quot;')}"
+                        data-tanggal="${it.tanggal || ''}">
+                        Bayar Sebagian
+                    </button>
+
+                </div>
+            </td>
+        </tr>
+    `).join('');
+}
+
+// ===============
+// Button Delegation
+// ===============
+
+function getButtonContext(btn) {
+    return {
+        debtId: btn.dataset.debtId,
+        identitas: btn.dataset.identitas || "",
+        tanggal: btn.dataset.tanggal || ""
+    };
+}
+
+debtResultsEl.addEventListener('click', async (e) => {
+    const target = e.target.closest("button");
+    if (!target) return;
+
+    const ctx = getButtonContext(target);
+
+    if (target.dataset.action === "set-lunas") {
+        await setLunas(ctx);
+    } else if (target.dataset.action === "bayar-sebagian") {
+        await bayarSebagian(ctx);
+    }
+});
+
+// ===============
+// SET LUNAS
+// ===============
+
+async function setLunas(ctx) {
+    try {
+        const res = await fetchWithRetry(
+            `${GAS_WEB_APP_URL}?action=updateDebt`,
+            {
+                method: "POST",
+                body: new URLSearchParams({
+                    mode: "lunas",
+                    debtId: ctx.debtId,
+                    identitas: ctx.identitas,
+                    date: ctx.tanggal
+                })
+            }
+        );
+
+        const data = await res.json();
+        if (data.status !== "SUCCESS")
+            throw new Error(data.error || "Gagal set lunas.");
+
+        showModal(
+            "Sukses",
+            "<p class='text-green-600 font-semibold'>Hutang berhasil dihapus (set lunas) dan nominalnya dipindah ke Cash Diterima Agen.</p>"
+        );
+
+        await searchDebt();
+
+    } catch (err) {
+        showModal("Gagal", `<p class='text-red-600 font-semibold'>${err.message}</p>`, true);
+    }
+}
+
+// ===============
+// BAYAR SEBAGIAN
+// ===============
+
+async function bayarSebagian(ctx) {
+    const input = prompt("Masukkan nominal bayar (angka):", "");
+    if (input === null) return;
+
+    const pay = parseRupiahToNumber(input);
+    if (!pay || pay <= 0) {
+        showModal("Input tidak valid", "<p class='text-yellow-600 font-semibold'>Nominal harus lebih dari 0.</p>");
+        return;
+    }
+
+    try {
+        const res = await fetchWithRetry(
+            `${GAS_WEB_APP_URL}?action=updateDebt`,
+            {
+                method: "POST",
+                body: new URLSearchParams({
+                    mode: "partial",
+                    debtId: ctx.debtId,
+                    pay: String(pay),
+                    identitas: ctx.identitas,
+                    date: ctx.tanggal
+                })
+            }
+        );
+
+        const data = await res.json();
+        if (data.status !== "SUCCESS")
+            throw new Error(data.error || "Gagal bayar sebagian.");
+
+        showModal(
+            "Sukses",
+            "<p class='text-green-600 font-semibold'>Pembayaran sebagian tersimpan. Cash Diterima Agen bertambah.</p>"
+        );
+
+        await searchDebt();
+
+    } catch (err) {
+        showModal("Gagal", `<p class='text-red-600 font-semibold'>${err.message}</p>`, true);
+    }
+}
+
+// Events
+debtBtnEl?.addEventListener("click", openDebtModal);
+debtModalCloseEl?.addEventListener("click", closeDebtModal);
+debtSearchBtnEl?.addEventListener("click", searchDebt);
 
         // --- INITIALIZATION ---
         document.addEventListener('DOMContentLoaded', () => {
