@@ -4,9 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Input Transaksi</title>
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Konfigurasi Font Inter -->
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
         body {
@@ -110,41 +108,44 @@
 
     <div class="max-w-4xl mx-auto bg-white p-6 sm:p-10 rounded-3xl shadow-2xl">
         
-        <!-- PENGINGAT URL APPS SCRIPT -->
         <div id="url-error-reminder" class="error-placeholder" style="display:none;">
             🚨 **PERINGATAN PENTING:** Silakan atur `GAS_WEB_APP_URL` di kode Anda! Semua fungsi data akan gagal.
         </div>
 
-        <!-- HEADER -->
         <h1 id="greeting" class="text-3xl font-bold mb-2 text-indigo-700">Selamat [Waktu] 👋</h1>
-        <p class="text-gray-500 mb-8">Pilih Channel Transaksi atau Hapus Data Hutang.</p>
+        <p class="text-gray-500 mb-8">Pilih Channel Transaksi, Hapus Hutang, atau Lihat Rekapan Harian.</p>
         
-        <!-- CHANNEL SELECTION & DEBT BUTTON -->
         <div class="flex flex-wrap gap-4 mb-10 border-b pb-6">
             <button data-channel="Flip" class="channel-btn px-6 py-3 rounded-xl font-semibold shadow-md">Flip</button>
             <button data-channel="Gopay" class="channel-btn px-6 py-3 rounded-xl font-semibold shadow-md">Gopay</button>
             <button data-channel="Buku Agen" class="channel-btn px-6 py-3 rounded-xl font-semibold shadow-md">Buku Agen</button>
             <button data-channel="QRIS" class="channel-btn px-6 py-3 rounded-xl font-semibold shadow-md">QRIS</button>
-            <button id="debt-btn" class="px-6 py-3 rounded-xl font-semibold bg-rose-600 text-white shadow-lg hover:bg-rose-700 transition duration-150 ml-auto">Hapus Hutang</button>
+            
+            <button id="rekapan-btn" class="px-6 py-3 rounded-xl font-semibold bg-blue-600 text-white shadow-lg hover:bg-blue-700 transition duration-150 ml-auto">
+                Lihat Rekapan Harian
+            </button>
+            
+            <button id="struk-btn" class="px-6 py-3 rounded-xl font-semibold bg-cyan-600 text-white shadow-lg hover:bg-cyan-700 transition duration-150">
+                Buat Struk
+            </button>
+            
+            <button id="debt-btn" class="px-6 py-3 rounded-xl font-semibold bg-rose-600 text-white shadow-lg hover:bg-rose-700 transition duration-150">
+                Hapus Hutang
+            </button>
         </div>
 
-        <!-- TRANSACTION FORM VIEW -->
         <div id="form-container" class="hidden">
             <h2 class="text-2xl font-bold mb-6 text-indigo-800 border-b pb-3">
                 Input Transaksi: <span id="form-title-span">Channel</span>
             </h2>
-            <!-- Form sekarang tidak memiliki target/method, akan dihandle oleh JS (fetch) -->
             <form id="transaction-form" class="needs-validation" novalidate>
-                <!-- Hidden inputs for sheetName, channel, and action -->
                 <input type="hidden" name="action" value="submitData">
                 <input type="hidden" name="sheetName" id="input-sheetName" value="">
                 <input type="hidden" name="channel" id="input-channel" value="">
                 <input type="hidden" name="timestamp" id="input-timestamp" value="">
                 
-                <!-- Grid 2 Kolom untuk field dinamis -->
                 <div id="dynamic-fields" class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
-                    <!-- Field akan di-inject di sini oleh JavaScript -->
-                </div>
+                    </div>
                 
                 <div class="mt-8 pt-6 border-t flex justify-end">
                     <button type="submit" id="submit-btn" class="px-8 py-3 bg-indigo-600 text-white font-bold rounded-xl shadow-lg hover:bg-indigo-700 transition duration-150">
@@ -154,7 +155,6 @@
             </form>
         </div>
 
-        <!-- DEBUG PANEL HANYA UNTUK LOG FETCH (Opsional, dihapus jika sudah stabil) -->
         <div id="debug-info" class="debug-panel mt-6">
             <p class="font-bold text-sm mb-1">🔍 Data Debug:</p>
             <p><strong>URL Apps Script:</strong> <span id="debug-url"></span></p>
@@ -164,7 +164,6 @@
 
     </div>
 
-    <!-- MODAL PESAN UMUM -->
     <div id="message-modal" class="modal-backdrop hidden">
         <div class="bg-white p-8 rounded-xl shadow-2xl max-w-sm w-full transform transition-all scale-100 opacity-100">
             <div class="flex justify-between items-center border-b pb-3 mb-4">
@@ -172,15 +171,13 @@
                 <button id="modal-close-btn" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
             </div>
             <div id="modal-content" class="text-gray-700 text-center">
-                <!-- Content will be injected here -->
-            </div>
+                </div>
             <div class="mt-6 text-right">
                 <button id="modal-close-btn-footer" class="px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600">Tutup</button>
             </div>
         </div>
     </div>
 
-    <!-- MODAL HAPUS HUTANG -->
     <div id="debt-modal" class="modal-backdrop hidden">
         <div class="bg-white p-8 rounded-xl shadow-2xl max-w-3xl w-full">
             <div class="flex justify-between items-center border-b pb-3 mb-4">
@@ -222,7 +219,6 @@
         </div>
     </div>
     
-    <!-- MODAL PEMBAYARAN SEBAGIAN (BARU) -->
     <div id="partial-payment-modal" class="modal-backdrop hidden">
         <div class="bg-white p-8 rounded-xl shadow-2xl max-w-sm w-full">
             <div class="flex justify-between items-center border-b pb-3 mb-4">
@@ -259,9 +255,17 @@
     <script>
         // =========================================================================
         // >>>>>>>>>>>>>>>> URL WEB APP GAS BARU ANDA <<<<<<<<<<<<<<<
-        // Pastikan URL di sini sudah diganti dan bukan lagi placeholder!
         const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwvNgT5TFgvKjyhmZvzUIjwLjFClqbT8KtlBYnPWy2j33iKXbQCD2KTUfqhNMvcJm2biQ/exec'; 
         // --------------------------------------------------------------------------------------------------
+
+        // >>>>>>>>>>>>>>>> URL WEBSITE PEMBUAT STRUK <<<<<<<<<<<<<<<
+        const STRUK_WEBSITE_URL = 'https://dwiky106.github.io/cetakstruk'; 
+        // --------------------------------------------------------------------------------------------------
+        
+        // >>>>>>>>>>>>>>>> URL REKAPAN HARIAN (WEBSITE/DASHBOARD) <<<<<<<<<<<<<<<
+        const REKAPAN_HARIAN_URL = 'https://dwiky106.github.io/rekapan'; 
+        // --------------------------------------------------------------------------------------------------
+
 
         const CHANNELS = {
             'Flip': {
@@ -297,7 +301,10 @@
         let inputTimestampEl;
         let channelButtons;
         let urlErrorReminderEl;
-
+        
+        // --- ELEMEN TOMBOL TAMBAHAN ---
+        let strukBtnEl; 
+        let rekapanBtnEl; 
 
         // --- DEBUG ELEMENTS ---
         let debugUrlEl;
@@ -419,7 +426,6 @@
             `;
         }
         
-        // Fungsi formatRupiah tetap dipertahankan
         function formatRupiah(number) {
             if (isNaN(number)) number = 0;
             
@@ -430,7 +436,6 @@
             }).format(number);
         }
         
-        // Fungsi parseRupiahToNumber untuk Debt Search tetap dipertahankan
         function parseRupiahToNumber(value) {
             if (typeof value === 'number') return value;
             if (typeof value === 'string') {
@@ -441,10 +446,11 @@
             return 0;
         }
 
-        // --- RETRY MECHANISM (Digunakan untuk Debt Search & Set Lunas) ---
+        // --- RETRY MECHANISM ---
         async function fetchWithRetry(url, options, maxRetries = 3) {
-            if (GAS_WEB_APP_URL === 'GANTI_DENGAN_URL_WEB_APP_APPS_SCRIPT_ANDA' || GAS_WEB_APP_URL.trim() === '') {
-                 throw new Error("ERROR: URL Web App belum diatur di dashboard_transaksi_agen.html.");
+            // Cek URL Apps Script yang masih placeholder (URL yang baru diberikan sudah valid)
+            if (GAS_WEB_APP_URL.includes('AKfycbw') && GAS_WEB_APP_URL.length < 100) {
+                 throw new Error("ERROR: URL Web App belum diatur atau masih placeholder.");
             }
             
             for (let i = 0; i < maxRetries; i++) {
@@ -485,11 +491,7 @@
             let html = '';
 
             // BARIS 1: IDENTITAS & PRODUK
-            
-            // Kolom D: Nama User/Identitas
             html += createTextInput('identitas', 'Nama User/Identitas', 'Masukkan nama pelanggan (boleh angka dan huruf)'); 
-            
-            // Kolom C: Produk
             html += createSelect('produk', 'Produk', config.products);
 
             // BARIS 2: E-WALLET & STATUS
@@ -503,15 +505,11 @@
             html += createSelect('status', 'Status Transaksi', ['Lunas', 'Terhutang']); 
             
             // BARIS 3: HARGA CHANNEL & JUAL
-            // Kolom G: Harga Channel
             html += createNumberInput('hargaChannel', 'Harga Channel (Modal)'); 
-            // Kolom H: Harga Jual
             html += createNumberInput('hargaJual', 'Harga Jual (Penerimaan)'); 
             
             // BARIS 4: CASH & ONLINE MASUK
-            // Kolom I: Cash Diterima Agen
             html += createNumberInput('cashDiterimaAgen', 'Cash Diterima Agen'); 
-            // Kolom J: Online Masuk
             html += createNumberInput('onlineMasuk', 'Online Masuk'); 
             
             // BARIS 5: JUMLAH TERHUTANG (KOLOM K) - Selalu ada placeholder
@@ -834,7 +832,7 @@
         }
 
 
-        // --- INITIALIZATION (Semua kode yang mengakses DOM dipindahkan ke sini) ---
+        // --- INITIALIZATION ---
         document.addEventListener('DOMContentLoaded', () => {
             // 1. Inisialisasi semua elemen DOM
             
@@ -850,20 +848,20 @@
             inputTimestampEl = document.getElementById('input-timestamp');
             channelButtons = document.querySelectorAll('.channel-btn');
             urlErrorReminderEl = document.getElementById('url-error-reminder');
+            
+            // --- Elemen Tombol Tambahan ---
+            strukBtnEl = document.getElementById('struk-btn');
+            rekapanBtnEl = document.getElementById('rekapan-btn');
 
-            // --- Debug Elements ---
+            // --- Debug, Modal, Debt, Partial Elements ---
             debugUrlEl = document.getElementById('debug-url');
             debugLastRequestEl = document.getElementById('debug-last-request');
             debugRawDataEl = document.getElementById('debug-raw-data');
-
-            // --- Modal Elements ---
             modalEl = document.getElementById('message-modal');
             modalTitleEl = document.getElementById('modal-title');
             modalContentEl = document.getElementById('modal-content');
             modalCloseBtnEl = document.getElementById('modal-close-btn');
             modalCloseBtnFooterEl = document.getElementById('modal-close-btn-footer');
-
-            // --- Debt Modal Elements ---
             debtBtnEl = document.getElementById('debt-btn');
             debtModalEl = document.getElementById('debt-modal');
             debtModalCloseEl = document.getElementById('debt-modal-close');
@@ -871,8 +869,6 @@
             debtIdentitasEl = document.getElementById('debt-identitas');
             debtDateEl = document.getElementById('debt-date');
             debtResultsEl = document.getElementById('debt-results');
-            
-            // --- Partial Payment Modal Elements ---
             partialPaymentModalEl = document.getElementById('partial-payment-modal');
             partialModalCloseEl = document.getElementById('partial-modal-close');
             partialPaymentFormEl = document.getElementById('partial-payment-form');
@@ -888,7 +884,7 @@
 
 
             // 2. Pasang semua Event Listeners
-
+            
             // Global Modal Listeners 
             modalCloseBtnEl.addEventListener('click', hideModal);
             modalCloseBtnFooterEl.addEventListener('click', hideModal); 
@@ -897,8 +893,9 @@
             transactionFormEl.addEventListener('submit', async function(e) {
                 e.preventDefault();
                 
-                if (GAS_WEB_APP_URL === 'GANTI_DENGAN_URL_WEB_APP_APPS_SCRIPT_ANDA') {
-                    showModal('ERROR PENTING', '<p class="text-red-600 font-semibold">URL Web App Apps Script belum diatur!</p><p class="text-sm mt-2">Silakan ganti placeholder **GAS_WEB_APP_URL** di kode HTML dengan URL Web App Anda yang valid.</p>', true);
+                // Cek sekali lagi apakah URL Apps Script sudah valid
+                if (GAS_WEB_APP_URL.includes('AKfycbw') && GAS_WEB_APP_URL.length < 100) {
+                    showModal('ERROR PENTING', '<p class="text-red-600 font-semibold">URL Web App Apps Script belum diatur!</p>', true);
                     urlErrorReminderEl.style.display = 'block';
                     return;
                 }
@@ -988,8 +985,18 @@
                     }
                 });
             });
-
             
+            // Listener Tombol Buat Struk
+            strukBtnEl.addEventListener('click', () => {
+                window.open(STRUK_WEBSITE_URL, '_blank');
+            });
+            
+            // Listener Tombol Rekapan Harian
+            rekapanBtnEl.addEventListener('click', () => {
+                window.open(REKAPAN_HARIAN_URL, '_blank');
+            });
+
+
             // Debt Modal Listeners 
             debtBtnEl.addEventListener("click", openDebtModal);
             debtModalCloseEl.addEventListener("click", closeDebtModal);
@@ -1027,9 +1034,11 @@
             // Tampilkan URL Apps Script di debug panel saat inisialisasi
             debugUrlEl.textContent = GAS_WEB_APP_URL;
 
-            // Tampilkan pengingat jika URL masih placeholder
-            if (GAS_WEB_APP_URL === 'GANTI_DENGAN_URL_WEB_APP_APPS_SCRIPT_ANDA') {
-                urlErrorReminderEl.style.display = 'block';
+            // Tampilkan pengingat jika URL Apps Script terlihat seperti placeholder atau bermasalah
+            if (GAS_WEB_APP_URL.includes('AKfycbw') && GAS_WEB_APP_URL.length < 100) {
+                 urlErrorReminderEl.style.display = 'block';
+            } else {
+                 urlErrorReminderEl.style.display = 'none';
             }
         });
     </script>
