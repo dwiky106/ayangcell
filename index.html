@@ -102,6 +102,25 @@
             text-align: center;
             margin-bottom: 1rem;
         }
+        /* Style untuk Debt Slideshow */
+        #active-debts-list {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-in-out, padding 0.5s ease-in-out;
+        }
+        #active-debts-list.expanded {
+            max-height: 500px; /* Nilai yang cukup besar untuk daftar */
+            padding-top: 1rem;
+            padding-bottom: 1rem;
+            overflow-y: auto; /* Agar bisa di-scroll jika terlalu banyak */
+        }
+        .debt-list-item {
+            animation: fadeIn 0.3s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
 <body>
@@ -111,11 +130,12 @@
         <div id="url-error-reminder" class="error-placeholder" style="display:none;">
             🚨 **PERINGATAN PENTING:** Silakan atur `GAS_WEB_APP_URL` di kode Anda! Semua fungsi data akan gagal.
         </div>
-
+        
+        <div id="realtime-datetime" class="text-right text-sm font-medium text-gray-400 mb-2">Memuat Waktu...</div>
         <h1 id="greeting" class="text-3xl font-bold mb-2 text-indigo-700">Selamat [Waktu] 👋</h1>
         <p class="text-gray-500 mb-4">Pilih Channel Transaksi, Hapus Hutang, atau Lihat Rekapan Harian.</p>
         
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
             
             <div class="bg-indigo-100 border border-indigo-300 p-4 rounded-xl flex justify-between items-center shadow-md">
                 <div class="flex flex-col">
@@ -151,24 +171,7 @@
                 </button>
             </div>
             
-            <div class="bg-amber-100 border border-amber-300 p-4 rounded-xl flex justify-between items-center shadow-md">
-                <div class="flex flex-col">
-                    <p class="text-sm font-medium text-amber-800">Saldo Buku Agen:</p>
-                    <div class="flex items-center gap-2 mt-1">
-                        <span id="buku-agen-balance-display" class="text-xl font-extrabold text-amber-700">
-                            Memuat...
-                        </span>
-                        <button id="toggle-buku-agen-btn" class="text-amber-500 hover:text-amber-700 text-xl p-1 rounded-full bg-amber-200/50">
-                            <span id="buku-agen-eye-icon">👁️</span>
-                        </button>
-                    </div>
-                </div>
-                <button id="add-buku-agen-btn" class="text-xs px-3 py-1 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition flex items-center">
-                    <span class="text-lg leading-none mr-0.5">+</span> Saldo
-                </button>
-            </div>
-
-            <div class="bg-rose-100 border border-rose-300 p-4 rounded-xl flex justify-between items-center shadow-md">
+            <div class="bg-rose-100 border border-rose-300 p-4 rounded-xl flex justify-between items-center shadow-md col-span-1">
                 <div class="flex flex-col">
                     <p class="text-sm font-medium text-rose-800">Total Hutang:</p>
                     <div class="flex items-center gap-2 mt-1">
@@ -184,9 +187,28 @@
                     Refresh
                 </button>
             </div>
+            
+            <div class="hidden lg:block"></div> 
+            
         </div>
+        
+        <div id="active-debts-container" class="mb-8">
+            <div class="flex justify-center -mt-4 mb-2">
+                <button id="toggle-debts-list-btn" class="text-gray-400 hover:text-gray-600 transition duration-150 p-2 text-3xl font-light">
+                    <span id="debts-list-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 transform transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </span>
+                </button>
+            </div>
 
-
+            <div id="active-debts-list" class="bg-white rounded-xl shadow-lg border border-gray-200">
+                 <div id="debt-list-content" class="px-4">
+                     <p class="text-center text-gray-500 py-4">Klik tombol panah di atas untuk melihat hutang aktif.</p>
+                 </div>
+            </div>
+        </div>
         <div class="flex flex-wrap gap-4 mb-10 border-b pb-6">
             <button data-channel="Flip" class="channel-btn px-6 py-3 rounded-xl font-semibold shadow-md">Flip</button>
             <button data-channel="Gopay" class="channel-btn px-6 py-3 rounded-xl font-semibold shadow-md">Gopay</button>
@@ -298,31 +320,6 @@
         </div>
     </div>
     
-    <div id="add-buku-agen-modal" class="modal-backdrop hidden">
-        <div class="bg-white p-8 rounded-xl shadow-2xl max-w-sm w-full">
-            <div class="flex justify-between items-center border-b pb-3 mb-4">
-                <h3 class="text-xl font-bold text-amber-600">➕ Tambah Saldo Buku Agen</h3>
-                <button id="buku-agen-modal-close" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
-            </div>
-            
-            <form id="add-buku-agen-form">
-                <div class="form-group">
-                    <label for="add-buku-agen-amount" class="form-label text-amber-600">Nominal Penambahan Saldo</label>
-                    <input type="text" id="add-buku-agen-amount" name="add-buku-agen-amount" class="form-input text-amber-700 font-bold text-xl" 
-                        placeholder="Contoh: 500000" 
-                        oninput="this.value = this.value.replace(/[^0-9]/g, '');" required>
-                </div>
-
-                <div class="mt-8 pt-4 border-t flex justify-end">
-                    <button type="submit" id="add-buku-agen-submit-btn" class="px-6 py-3 bg-amber-600 text-white font-bold rounded-xl shadow-lg hover:bg-amber-700 transition duration-150">
-                        <span id="add-buku-agen-submit-text">Catat Penambahan Saldo</span>
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-
     <div id="debt-modal" class="modal-backdrop hidden">
         <div class="bg-white p-8 rounded-xl shadow-2xl max-w-3xl w-full">
             <div class="flex justify-between items-center border-b pb-3 mb-4">
@@ -338,7 +335,7 @@
 
                 <div class="flex flex-col sm:flex-row gap-3 items-end">
                     <div class="form-group flex-1 w-full">
-                        <label class="form-label">Tanggal Hutang</label>
+                        <label class="form-label">Tanggal Hutang (Opsional)</label>
                         <input id="debt-date" type="date" class="form-input" />
                     </div>
                     <button id="debt-search-btn" class="px-5 py-3 w-full sm:w-auto bg-indigo-600 text-white rounded-xl hover:bg-indigo-700">
@@ -400,7 +397,7 @@
     <script>
         // =========================================================================
         // >>>>>>>>>>>>>>>> URL WEB APP GAS BARU ANDA <<<<<<<<<<<<<<<
-        const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyuoo1eqACy17DBn06otD1ze2cyyRfZQHXQfM_8dyR2YVOYToC-z1XA4MvkdOgXUmb-jg/exec'; 
+        const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbycYP7J-64QT2VoAfGL11FpFf1eeqsUqBlpkkPfbPd9gjYo65u0BKtvAyK0BTl6Uo7uJA/exec'; 
         // --------------------------------------------------------------------------------------------------
 
         // >>>>>>>>>>>>>>>> URL WEBSITE PEMBUAT STRUK <<<<<<<<<<<<<<<
@@ -423,9 +420,10 @@
         let currentCashBalance = 0;
         let isCashVisible = true; 
         
-        // VARIABEL GLOBAL UNTUK SALDO BUKU AGEN (BARU)
-        let currentBukuAgenBalance = 0;
-        let isBukuAgenVisible = true; 
+        // VARIABEL GLOBAL UNTUK DAFTAR HUTANG AKTIF
+        let activeDebts = [];
+        let isDebtsListExpanded = false;
+        const ACTIVE_DEBTS_LIMIT = 50; // Batas data yang diambil untuk list aktif
 
         const CHANNELS = {
             'Flip': {
@@ -467,6 +465,15 @@
         let toggleDebtBtnEl;
         let eyeIconEl;
         let refreshDebtBtnEl;
+        
+        // --- REALTIME DATETIME ELEMENT (BARU) ---
+        let realtimeDatetimeEl;
+        
+        // --- ACTIVE DEBTS LIST ELEMENTS ---
+        let toggleDebtsListBtnEl;
+        let debtsListIconEl;
+        let activeDebtsListEl;
+        let debtListContentEl;
 
         // --- FLIP BALANCE DASHBOARD ELEMENTS ---
         let flipBalanceDisplayEl;
@@ -480,11 +487,7 @@
         let cashEyeIconEl;
         let addCashBtnEl;
         
-        // --- BUKU AGEN BALANCE DASHBOARD ELEMENTS (BARU) ---
-        let bukuAgenBalanceDisplayEl;
-        let toggleBukuAgenBtnEl;
-        let bukuAgenEyeIconEl;
-        let addBukuAgenBtnEl;
+        // HILANG: Buku Agen Balance Dashboard Elements
 
 
         // --- ADD BALANCE MODAL ELEMENTS ---
@@ -503,13 +506,7 @@
         let addCashSubmitBtnEl;
         let addCashSubmitTextEl;
         
-        // --- ADD BUKU AGEN MODAL ELEMENTS (BARU) ---
-        let addBukuAgenModalEl;
-        let bukuAgenModalCloseEl;
-        let addBukuAgenFormEl;
-        let addBukuAgenAmountEl;
-        let addBukuAgenSubmitBtnEl;
-        let addBukuAgenSubmitTextEl;
+        // HILANG: Add Buku Agen Modal Elements
 
 
         // --- DEBUG ELEMENTS ---
@@ -549,6 +546,27 @@
 
 
         // --- HELPER FUNCTIONS ---
+        
+        // FUNGSI BARU UNTUK UPDATE WAKTU REAL-TIME PADA DASHBOARD
+        function updateRealtimeDatetime() {
+            const now = new Date();
+            const options = { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric', 
+                hour: '2-digit', 
+                minute: '2-digit', 
+                second: '2-digit',
+                timeZoneName: 'short'
+            };
+            const formattedDatetime = now.toLocaleDateString('id-ID', options);
+            
+            if (realtimeDatetimeEl) {
+                realtimeDatetimeEl.textContent = formattedDatetime;
+            }
+        }
+        // END FUNGSI BARU
 
         function showModal(title, content, isError = false) {
             modalTitleEl.textContent = title;
@@ -598,14 +616,7 @@
             }
         }
         
-        function setAddBukuAgenLoading(isLoading) { // <<< BARU
-             addBukuAgenSubmitBtnEl.disabled = isLoading;
-            if (isLoading) {
-                addBukuAgenSubmitTextEl.innerHTML = '<span class="spinner"></span> Memproses...';
-            } else {
-                addBukuAgenSubmitTextEl.innerHTML = 'Catat Penambahan Saldo';
-            }
-        }
+        // HILANG: setAddBukuAgenLoading
 
         function getGreeting() {
             const hour = new Date().getHours();
@@ -738,8 +749,15 @@
                 currentTotalDebt = parseRupiahToNumber(data.total); 
                 updateDebtDisplay();
                 debugLastRequestEl.textContent = `SUCCESS: getTotalDebt`;
+                
+                // Muat juga daftar hutang aktif (jika sedang dibuka)
+                if(isDebtsListExpanded) {
+                    await fetchActiveDebts();
+                }
+                
             } catch (err) {
                 totalDebtDisplayEl.textContent = 'Gagal memuat!';
+                debtListContentEl.innerHTML = `<p class="text-center text-red-600 font-semibold py-4">Gagal memuat daftar hutang. (${err.message.substring(0, 50)}...)</p>`;
                 debugLastRequestEl.textContent = `FAILED: getTotalDebt (${err.message.substring(0, 50)}...)`;
             } finally {
                 refreshDebtBtnEl.disabled = false;
@@ -760,6 +778,87 @@
             isDebtVisible = !isDebtVisible;
             updateDebtDisplay();
         }
+        
+        // ============================
+        // LOGIKA DAFTAR HUTANG AKTIF (SLIDESHOW)
+        // ============================
+        
+        async function fetchActiveDebts() {
+            debtListContentEl.innerHTML = `<p class="text-center text-gray-500 py-4"><span class="spinner" style="border-top: 4px solid #4f46e5;"></span> Memuat ${ACTIVE_DEBTS_LIMIT} hutang terbaru...</p>`;
+            
+            try {
+                const url = `${GAS_WEB_APP_URL}?action=getActiveDebts&limit=${ACTIVE_DEBTS_LIMIT}`;
+                const res = await fetchWithRetry(url, { method: 'GET' });
+                
+                let data;
+                try {
+                    data = await res.json();
+                } catch (e) {
+                     const rawText = await res.text();
+                     throw new Error(`Respon server bukan JSON (Active Debts Gagal). Respon mentah: ${rawText.substring(0, 200)}...`);
+                }
+
+                if (data.status !== "SUCCESS" || !Array.isArray(data.data)) {
+                    throw new Error(data.error || "Gagal mendapatkan daftar hutang aktif.");
+                }
+                
+                activeDebts = data.data;
+                renderActiveDebtsList();
+
+            } catch (err) {
+                debtListContentEl.innerHTML = `<p class="text-center text-red-600 font-semibold py-4">Gagal memuat daftar hutang. (${err.message})</p>`;
+            }
+        }
+        
+        function renderActiveDebtsList() {
+            if (activeDebts.length === 0) {
+                debtListContentEl.innerHTML = `<p class="text-center text-gray-500 py-4">Tidak ada hutang aktif saat ini. ✨</p>`;
+                return;
+            }
+            
+            const listHtml = activeDebts.map(it => `
+                <div class="debt-list-item flex flex-col sm:flex-row justify-between items-start sm:items-center p-3 border-b last:border-b-0">
+                    <div class="flex-1 min-w-0 mb-2 sm:mb-0">
+                        <p class="text-sm font-semibold text-gray-900 truncate">${it.identitas || 'N/A'} <span class="text-xs text-gray-400">(${it.sheet})</span></p>
+                        <p class="text-xs text-gray-500">Tgl: ${it.tanggal || 'N/A'} | Produk: ${it.produk || 'N/A'}</p>
+                        <p class="text-md font-extrabold text-rose-600 mt-1">${formatRupiah(it.nominal)}</p>
+                    </div>
+                    <button class="px-3 py-1.5 rounded-lg bg-red-600 text-white text-xs font-bold hover:bg-red-700 transition"
+                        data-action="set-lunas"
+                        data-debt-id="${it.id}"
+                        data-identitas="${(it.identitas || '').replace(/"/g,'&quot;')}"
+                        data-tanggal="${it.tanggal || ''}"
+                        data-nominal="${it.nominal || 0}"
+                        data-produk="${it.produk || ''}">
+                        Set Lunas
+                    </button>
+                </div>
+            `).join('');
+            
+            debtListContentEl.innerHTML = `<div class="divide-y divide-gray-100">${listHtml}</div>`;
+        }
+
+        function toggleDebtsList() {
+            isDebtsListExpanded = !isDebtsListExpanded;
+            activeDebtsListEl.classList.toggle('expanded', isDebtsListExpanded);
+            
+            if (isDebtsListExpanded) {
+                // Ganti ikon ke panah atas
+                debtsListIconEl.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 transform transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7" />
+                </svg>`;
+                // Muat data jika belum dimuat atau perlu refresh
+                if (activeDebts.length === 0 || debtListContentEl.textContent.includes('Gagal memuat') || debtListContentEl.textContent.includes('Memuat daftar hutang')) {
+                    fetchActiveDebts();
+                }
+            } else {
+                // Ganti ikon ke panah bawah
+                debtsListIconEl.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 transform transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                </svg>`;
+            }
+        }
+
 
         // ============================
         // LOGIKA SALDO FLIP
@@ -859,55 +958,7 @@
             updateCashDisplay();
         }
 
-        // ============================
-        // LOGIKA SALDO BUKU AGEN (BARU)
-        // ============================
-        
-        async function fetchBukuAgenBalance() {
-            bukuAgenBalanceDisplayEl.innerHTML = `<span class="spinner"></span> Loading...`;
-            
-            debugLastRequestEl.textContent = `GET: getBukuAgenBalance`;
-
-            try {
-                const url = `${GAS_WEB_APP_URL}?action=getBukuAgenBalance`;
-                const res = await fetchWithRetry(url, { method: 'GET' });
-                
-                let data;
-                try {
-                    data = await res.json();
-                } catch (e) {
-                     const rawText = await res.text();
-                     throw new Error(`Respon server bukan JSON (Saldo Buku Agen Gagal). Respon mentah: ${rawText.substring(0, 200)}...`);
-                }
-
-                if (data.status !== "SUCCESS" || data.balance === undefined) {
-                    throw new Error(data.error || "Gagal mendapatkan Saldo Buku Agen.");
-                }
-
-                currentBukuAgenBalance = parseRupiahToNumber(data.balance); 
-                updateBukuAgenDisplay();
-                debugLastRequestEl.textContent = `SUCCESS: getBukuAgenBalance`;
-            } catch (err) {
-                bukuAgenBalanceDisplayEl.textContent = 'Gagal memuat!';
-                debugLastRequestEl.textContent = `FAILED: getBukuAgenBalance (${err.message.substring(0, 50)}...)`;
-            }
-        }
-
-        function updateBukuAgenDisplay() {
-            if (isBukuAgenVisible) {
-                bukuAgenBalanceDisplayEl.textContent = formatRupiah(currentBukuAgenBalance);
-                bukuAgenEyeIconEl.textContent = '👁️';
-            } else {
-                bukuAgenBalanceDisplayEl.textContent = '*****';
-                bukuAgenEyeIconEl.textContent = '🔒';
-            }
-        }
-
-        function toggleBukuAgenVisibility() {
-            isBukuAgenVisible = !isBukuAgenVisible;
-            updateBukuAgenDisplay();
-        }
-
+        // HILANG: Logika Saldo Buku Agen
 
         // ============================
         // LOGIKA TAMBAH SALDO FLIP
@@ -1029,65 +1080,7 @@
             }
         }
 
-        // ============================
-        // LOGIKA TAMBAH SALDO BUKU AGEN (BARU)
-        // ============================
-        
-        function openAddBukuAgenModal() {
-            addBukuAgenModalEl.classList.remove('hidden');
-            addBukuAgenAmountEl.value = ''; // Reset
-        }
-
-        function closeAddBukuAgenModal() {
-            addBukuAgenModalEl.classList.add('hidden');
-        }
-
-        async function handleAddBukuAgen(e) {
-            e.preventDefault();
-            setAddBukuAgenLoading(true);
-
-            const amount = parseRupiahToNumber(addBukuAgenAmountEl.value);
-
-            if (amount <= 0) {
-                showModal('Input Tidak Valid', '<p class="text-yellow-600 font-semibold">Nominal penambahan saldo Buku Agen harus lebih besar dari 0.</p>');
-                setAddBukuAgenLoading(false);
-                return;
-            }
-
-            try {
-                debugLastRequestEl.textContent = `POST: addBukuAgenBalance (Nominal: ${amount})`;
-
-                const res = await fetchWithRetry(
-                    GAS_WEB_APP_URL,
-                    {
-                        method: "POST",
-                        body: new URLSearchParams({
-                            action: "addBukuAgenBalance", 
-                            amount: amount 
-                        })
-                    }
-                );
-
-                const data = await res.json();
-                
-                if (data.status !== "SUCCESS")
-                    throw new Error(data.error || "Gagal menambah saldo Buku Agen. Cek balasan error dari Apps Script.");
-
-                closeAddBukuAgenModal();
-                showModal(
-                    "Sukses",
-                    `<p class='text-green-600 font-semibold'>Penambahan Saldo Buku Agen sebesar ${formatRupiah(amount)} berhasil dicatat.</p>`
-                );
-
-                // Muat ulang saldo setelah penambahan
-                await fetchBukuAgenBalance();
-
-            } catch (err) {
-                showModal("Gagal", `<p class='text-red-600 font-semibold'>${err.message}</p>`, true);
-            } finally {
-                setAddBukuAgenLoading(false);
-            }
-        }
+        // HILANG: Logika Tambah Saldo Buku Agen
 
 
         // --- FORM RENDERING & DYNAMICS ---
@@ -1192,7 +1185,8 @@
 
         function openDebtModal() {
             debtModalEl.classList.remove('hidden');
-            if (!debtDateEl.value) debtDateEl.value = new Date().toISOString().split('T')[0];
+            // debtDateEl.value = new Date().toISOString().split('T')[0]; // Tidak perlu set tanggal secara default
+            debtIdentitasEl.focus();
         }
 
         function closeDebtModal() {
@@ -1204,7 +1198,8 @@
                 debtId: btn.dataset.debtId,
                 identitas: btn.dataset.identitas || "",
                 tanggal: btn.dataset.tanggal || "",
-                nominal: parseRupiahToNumber(btn.dataset.nominal || 0)
+                nominal: parseRupiahToNumber(btn.dataset.nominal || 0),
+                produk: btn.dataset.produk || "" 
             };
         }
 
@@ -1263,10 +1258,10 @@
                 <tr class="hover:bg-gray-50">
                     <td class="px-4 py-3 text-sm text-gray-900">
                         ${it.identitas || '-'}
-                        <div class="text-xs text-gray-500 mt-1">Tgl: ${it.tanggal || 'N/A'}</div>
+                        <div class="text-xs text-gray-500 mt-1">Tgl: ${it.tanggal || 'N/A'} | Produk: ${it.produk || 'N/A'}</div>
                     </td>
                     <td class="px-4 py-3 text-sm text-right font-semibold text-rose-600">
-                        ${formatRupiah(parseRupiahToNumber(it.nominal))}
+                        ${formatRupiah(it.nominal)}
                     </td>
                     <td class="px-4 py-3 text-center">
                         <div class="flex gap-2 justify-center flex-wrap">
@@ -1282,7 +1277,8 @@
                                 data-action="set-lunas"
                                 data-debt-id="${it.id}"
                                 data-identitas="${(it.identitas || '').replace(/"/g,'&quot;')}"
-                                data-tanggal="${it.tanggal || ''}">
+                                data-tanggal="${it.tanggal || ''}"
+                                data-nominal="${it.nominal || 0}">
                                 Set Lunas
                             </button>
                         </div>
@@ -1294,15 +1290,18 @@
         // ============================
         // LOGIKA SET LUNAS
         // ============================
-        async function setLunas(ctx) {
-            const button = event.target.closest('button');
+        async function setLunas(ctx, isFromList = false, targetButton) {
+            const button = targetButton || event.target.closest('button');
             const originalHtml = button.innerHTML;
             
+            // Dapatkan nominal terbaru (untuk pesan konfirmasi)
+            const currentNominal = isFromList ? ctx.nominal : parseRupiahToNumber(targetButton.dataset.nominal || 0);
+
             try {
                 button.disabled = true;
                 button.innerHTML = '<span class="spinner"></span> Proses...';
 
-                debugLastRequestEl.textContent = `POST: updateDebt (ID: ${ctx.debtId}, Mode: Lunas)`;
+                debugLastRequestEl.textContent = `POST: updateDebt (ID: ${ctx.debtId}, Mode: lunas)`;
 
                 const res = await fetchWithRetry(
                     GAS_WEB_APP_URL,
@@ -1311,9 +1310,7 @@
                         body: new URLSearchParams({
                             action: "updateDebt", 
                             mode: "lunas",
-                            debtId: ctx.debtId,
-                            identitas: ctx.identitas,
-                            date: ctx.tanggal
+                            debtId: ctx.debtId
                         })
                     }
                 );
@@ -1333,12 +1330,12 @@
 
                 showModal(
                     "Sukses",
-                    "<p class='text-green-600 font-semibold'>Hutang berhasil dihapus (set lunas) dan nominalnya dipindah ke Cash Diterima Agen.</p>"
+                    `<p class='text-green-600 font-semibold'>Hutang ${ctx.identitas} sebesar ${formatRupiah(currentNominal)} berhasil dihapus (set lunas).</p>`
                 );
 
-                // Setelah berhasil, muat ulang hasil pencarian hutang & Total Debt
-                await searchDebt();
+                // Setelah berhasil, muat ulang Total Debt & Active Debts
                 await fetchTotalDebt();
+                if (!isFromList) await searchDebt(); // Hanya refresh hasil pencarian jika dari modal Hapus Hutang
 
             } catch (err) {
                 showModal("Gagal", `<p class='text-red-600 font-semibold'>${err.message}</p>`, true);
@@ -1395,7 +1392,7 @@
 
 
             try {
-                debugLastRequestEl.textContent = `POST: updateDebt (ID: ${ctx.debtId}, Mode: Partial, Nominal: ${ctx.nominalBayar})`;
+                debugLastRequestEl.textContent = `POST: updateDebt (ID: ${ctx.debtId}, Mode: partial, Nominal: ${ctx.nominalBayar})`;
 
                 const res = await fetchWithRetry(
                     GAS_WEB_APP_URL,
@@ -1405,8 +1402,6 @@
                             action: "updateDebt", 
                             mode: "partial",
                             debtId: ctx.debtId,
-                            identitas: ctx.identitas,
-                            date: ctx.tanggal,
                             amount: ctx.nominalBayar 
                         })
                     }
@@ -1457,7 +1452,8 @@
             submitBtnEl = document.getElementById('submit-btn');
             inputSheetNameEl = document.getElementById('input-sheetName');
             inputChannelEl = document.getElementById('input-channel');
-            inputTimestampEl = document.getElementById('input-timestamp');
+            // inputTimestampEl tidak perlu, karena kita set langsung di submit listener
+            inputTimestampEl = document.getElementById('input-timestamp'); 
             channelButtons = document.querySelectorAll('.channel-btn');
             urlErrorReminderEl = document.getElementById('url-error-reminder');
             
@@ -1465,11 +1461,20 @@
             strukBtnEl = document.getElementById('struk-btn');
             rekapanBtnEl = document.getElementById('rekapan-btn');
             
+            // --- REALTIME DATETIME ELEMENT (BARU) ---
+            realtimeDatetimeEl = document.getElementById('realtime-datetime');
+            
             // --- DEBT DASHBOARD ELEMENTS ---
             totalDebtDisplayEl = document.getElementById('total-debt-display');
             toggleDebtBtnEl = document.getElementById('toggle-debt-btn');
             eyeIconEl = document.getElementById('eye-icon');
             refreshDebtBtnEl = document.getElementById('refresh-debt-btn');
+            
+            // --- ACTIVE DEBTS LIST ELEMENTS ---
+            toggleDebtsListBtnEl = document.getElementById('toggle-debts-list-btn');
+            debtsListIconEl = document.getElementById('debts-list-icon');
+            activeDebtsListEl = document.getElementById('active-debts-list');
+            debtListContentEl = document.getElementById('debt-list-content');
             
             // --- FLIP BALANCE DASHBOARD ELEMENTS ---
             flipBalanceDisplayEl = document.getElementById('flip-balance-display');
@@ -1483,11 +1488,7 @@
             cashEyeIconEl = document.getElementById('cash-eye-icon');
             addCashBtnEl = document.getElementById('add-cash-btn');
             
-            // --- BUKU AGEN BALANCE DASHBOARD ELEMENTS (BARU) ---
-            bukuAgenBalanceDisplayEl = document.getElementById('buku-agen-balance-display');
-            toggleBukuAgenBtnEl = document.getElementById('toggle-buku-agen-btn');
-            bukuAgenEyeIconEl = document.getElementById('buku-agen-eye-icon');
-            addBukuAgenBtnEl = document.getElementById('add-buku-agen-btn');
+            // HILANG: Buku Agen Balance Dashboard Elements
 
 
             // --- ADD BALANCE MODAL ELEMENTS ---
@@ -1506,13 +1507,7 @@
             addCashSubmitBtnEl = document.getElementById('add-cash-submit-btn');
             addCashSubmitTextEl = document.getElementById('add-cash-submit-text');
             
-            // --- ADD BUKU AGEN MODAL ELEMENTS (BARU) ---
-            addBukuAgenModalEl = document.getElementById('add-buku-agen-modal');
-            bukuAgenModalCloseEl = document.getElementById('buku-agen-modal-close');
-            addBukuAgenFormEl = document.getElementById('add-buku-agen-form');
-            addBukuAgenAmountEl = document.getElementById('add-buku-agen-amount');
-            addBukuAgenSubmitBtnEl = document.getElementById('add-buku-agen-submit-btn');
-            addBukuAgenSubmitTextEl = document.getElementById('add-buku-agen-submit-text');
+            // HILANG: Add Buku Agen Modal Elements
 
 
             // --- Debug, Modal, Debt, Partial Elements ---
@@ -1557,9 +1552,23 @@
                 await fetchTotalDebt();
                 await fetchFlipBalance();
                 await fetchCashBalance(); 
-                await fetchBukuAgenBalance(); // Refresh Buku Agen
+                // HILANG: Refresh Buku Agen
             });
             
+            // Active Debts List Listener (NEW)
+            toggleDebtsListBtnEl.addEventListener('click', toggleDebtsList);
+            debtListContentEl.addEventListener('click', async (e) => {
+                const target = e.target.closest("button[data-action='set-lunas']");
+                if (!target) return;
+                
+                const ctx = getButtonContext(target);
+                // Konfirmasi dulu
+                 if (confirm(`Anda yakin ingin menghapus (set Lunas) hutang atas nama ${ctx.identitas} sebesar ${formatRupiah(ctx.nominal)}?`)) {
+                    await setLunas(ctx, true, target);
+                 }
+            });
+
+
             // Flip Balance Listeners 
             toggleBalanceBtnEl.addEventListener('click', toggleBalanceVisibility);
             addBalanceBtnEl.addEventListener('click', openAddBalanceModal);
@@ -1568,9 +1577,7 @@
             toggleCashBtnEl.addEventListener('click', toggleCashVisibility);
             addCashBtnEl.addEventListener('click', openAddCashModal);
             
-            // Buku Agen Balance Listeners (BARU)
-            toggleBukuAgenBtnEl.addEventListener('click', toggleBukuAgenVisibility);
-            addBukuAgenBtnEl.addEventListener('click', openAddBukuAgenModal);
+            // HILANG: Buku Agen Balance Listeners
 
 
             // Add Balance Modal Listeners 
@@ -1581,9 +1588,7 @@
             cashModalCloseEl.addEventListener('click', closeAddCashModal);
             addCashFormEl.addEventListener('submit', handleAddCash);
             
-            // Add Buku Agen Modal Listeners (BARU)
-            bukuAgenModalCloseEl.addEventListener('click', closeAddBukuAgenModal);
-            addBukuAgenFormEl.addEventListener('submit', handleAddBukuAgen);
+            // HILANG: Add Buku Agen Modal Listeners
 
 
             // Form Submission Listener 
@@ -1613,15 +1618,8 @@
                     formData.set(key, value); 
                 }
 
-                const timestamp = new Date().toLocaleString('id-ID', {
-                    timeZone: 'Asia/Jakarta',
-                    year: 'numeric',
-                    month: '2-digit',
-                    day: '2-digit',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    second: '2-digit'
-                });
+                // PERBAIKAN: Mengambil timestamp saat submit dengan format Date ISO untuk Apps Script
+                const timestamp = new Date().toISOString(); 
                 formData.set('timestamp', timestamp);
                 
                 debugLastRequestEl.textContent = `POST: submitData (${currentChannel})`;
@@ -1652,7 +1650,7 @@
                         await fetchTotalDebt(); 
                         await fetchFlipBalance();
                         await fetchCashBalance(); 
-                        await fetchBukuAgenBalance(); // Refresh Buku Agen
+                        // HILANG: Refresh Buku Agen
 
                     } else {
                         // Jika status ERROR dari Apps Script
@@ -1704,7 +1702,7 @@
             debtModalCloseEl.addEventListener("click", closeDebtModal);
             debtSearchBtnEl.addEventListener("click", searchDebt);
 
-            // Debt Action Delegation Listener
+            // Debt Action Delegation Listener (from Modal)
             debtResultsEl.addEventListener('click', async (e) => {
                 const target = e.target.closest("button");
                 if (!target) return;
@@ -1719,7 +1717,10 @@
                 const ctx = getButtonContext(target);
 
                 if (action === "set-lunas") {
-                    await setLunas(ctx);
+                     // Konfirmasi dulu
+                     if (confirm(`Anda yakin ingin menghapus (set Lunas) hutang atas nama ${ctx.identitas} sebesar ${formatRupiah(ctx.nominal)}?`)) {
+                        await setLunas(ctx);
+                     }
                 } else if (action === "partial-pay") {
                     openPartialPaymentModal(ctx);
                 }
@@ -1733,14 +1734,18 @@
             // 3. Setup Awal
             getGreeting();
             
+            // Setup Real-time Clock
+            updateRealtimeDatetime();
+            setInterval(updateRealtimeDatetime, 1000); // Kunci Real-time: Update setiap 1 detik
+            
             // Tampilkan URL Apps Script di debug panel saat inisialisasi
             debugUrlEl.textContent = GAS_WEB_APP_URL;
 
             // Panggil fungsi untuk memuat semua saldo dan hutang saat halaman dimuat
-            fetchTotalDebt();
+            fetchTotalDebt(); // Ini akan memuat Total Debt dan Active Debts (jika diperluas)
             fetchFlipBalance();
             fetchCashBalance(); 
-            fetchBukuAgenBalance(); // <<< BARU
+            // HILANG: Panggil fetchBukuAgenBalance
 
             // Tampilkan pengingat jika URL Apps Script terlihat seperti placeholder atau bermasalah
             if (GAS_WEB_APP_URL.includes('AKfycbw') && GAS_WEB_APP_URL.length < 100) {
