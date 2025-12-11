@@ -106,15 +106,87 @@
 </head>
 <body>
 
-    <div class="max-w-4xl mx-auto bg-white p-6 sm:p-10 rounded-3xl shadow-2xl">
+    <div class="max-w-6xl mx-auto bg-white p-6 sm:p-10 rounded-3xl shadow-2xl">
         
         <div id="url-error-reminder" class="error-placeholder" style="display:none;">
             🚨 **PERINGATAN PENTING:** Silakan atur `GAS_WEB_APP_URL` di kode Anda! Semua fungsi data akan gagal.
         </div>
 
         <h1 id="greeting" class="text-3xl font-bold mb-2 text-indigo-700">Selamat [Waktu] 👋</h1>
-        <p class="text-gray-500 mb-8">Pilih Channel Transaksi, Hapus Hutang, atau Lihat Rekapan Harian.</p>
+        <p class="text-gray-500 mb-4">Pilih Channel Transaksi, Hapus Hutang, atau Lihat Rekapan Harian.</p>
         
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            
+            <div class="bg-indigo-100 border border-indigo-300 p-4 rounded-xl flex justify-between items-center shadow-md">
+                <div class="flex flex-col">
+                    <p class="text-sm font-medium text-indigo-800">Saldo Flip:</p>
+                    <div class="flex items-center gap-2 mt-1">
+                        <span id="flip-balance-display" class="text-xl font-extrabold text-indigo-700">
+                            Memuat...
+                        </span>
+                        <button id="toggle-balance-btn" class="text-indigo-500 hover:text-indigo-700 text-xl p-1 rounded-full bg-indigo-200/50">
+                            <span id="balance-eye-icon">👁️</span>
+                        </button>
+                    </div>
+                </div>
+                <button id="add-balance-btn" class="text-xs px-3 py-1 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition flex items-center">
+                    <span class="text-lg leading-none mr-0.5">+</span> Flip
+                </button>
+            </div>
+            
+            <div class="bg-teal-100 border border-teal-300 p-4 rounded-xl flex justify-between items-center shadow-md">
+                <div class="flex flex-col">
+                    <p class="text-sm font-medium text-teal-800">Cash Ditangan:</p>
+                    <div class="flex items-center gap-2 mt-1">
+                        <span id="cash-balance-display" class="text-xl font-extrabold text-teal-700">
+                            Memuat...
+                        </span>
+                        <button id="toggle-cash-btn" class="text-teal-500 hover:text-teal-700 text-xl p-1 rounded-full bg-teal-200/50">
+                            <span id="cash-eye-icon">👁️</span>
+                        </button>
+                    </div>
+                </div>
+                <button id="add-cash-btn" class="text-xs px-3 py-1 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition flex items-center">
+                    <span class="text-lg leading-none mr-0.5">+</span> Cash
+                </button>
+            </div>
+            
+            <div class="bg-amber-100 border border-amber-300 p-4 rounded-xl flex justify-between items-center shadow-md">
+                <div class="flex flex-col">
+                    <p class="text-sm font-medium text-amber-800">Saldo Buku Agen:</p>
+                    <div class="flex items-center gap-2 mt-1">
+                        <span id="buku-agen-balance-display" class="text-xl font-extrabold text-amber-700">
+                            Memuat...
+                        </span>
+                        <button id="toggle-buku-agen-btn" class="text-amber-500 hover:text-amber-700 text-xl p-1 rounded-full bg-amber-200/50">
+                            <span id="buku-agen-eye-icon">👁️</span>
+                        </button>
+                    </div>
+                </div>
+                <button id="add-buku-agen-btn" class="text-xs px-3 py-1 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition flex items-center">
+                    <span class="text-lg leading-none mr-0.5">+</span> Saldo
+                </button>
+            </div>
+
+            <div class="bg-rose-100 border border-rose-300 p-4 rounded-xl flex justify-between items-center shadow-md">
+                <div class="flex flex-col">
+                    <p class="text-sm font-medium text-rose-800">Total Hutang:</p>
+                    <div class="flex items-center gap-2 mt-1">
+                        <span id="total-debt-display" class="text-xl font-extrabold text-rose-700">
+                            Memuat...
+                        </span>
+                        <button id="toggle-debt-btn" class="text-rose-500 hover:text-rose-700 text-xl p-1 rounded-full bg-rose-200/50">
+                            <span id="eye-icon">👁️</span>
+                        </button>
+                    </div>
+                </div>
+                <button id="refresh-debt-btn" class="text-xs px-3 py-1 bg-rose-500 text-white rounded-lg hover:bg-rose-600 transition">
+                    Refresh
+                </button>
+            </div>
+        </div>
+
+
         <div class="flex flex-wrap gap-4 mb-10 border-b pb-6">
             <button data-channel="Flip" class="channel-btn px-6 py-3 rounded-xl font-semibold shadow-md">Flip</button>
             <button data-channel="Gopay" class="channel-btn px-6 py-3 rounded-xl font-semibold shadow-md">Gopay</button>
@@ -177,6 +249,79 @@
             </div>
         </div>
     </div>
+    
+    <div id="add-balance-modal" class="modal-backdrop hidden">
+        <div class="bg-white p-8 rounded-xl shadow-2xl max-w-sm w-full">
+            <div class="flex justify-between items-center border-b pb-3 mb-4">
+                <h3 class="text-xl font-bold text-indigo-600">➕ Tambah Saldo Flip</h3>
+                <button id="balance-modal-close" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+            </div>
+            
+            <form id="add-balance-form">
+                <div class="form-group">
+                    <label for="add-balance-amount" class="form-label text-indigo-600">Nominal Penambahan Saldo</label>
+                    <input type="text" id="add-balance-amount" name="add-balance-amount" class="form-input text-indigo-700 font-bold text-xl" 
+                        placeholder="Contoh: 100000" 
+                        oninput="this.value = this.value.replace(/[^0-9]/g, '');" required>
+                </div>
+
+                <div class="mt-8 pt-4 border-t flex justify-end">
+                    <button type="submit" id="add-balance-submit-btn" class="px-6 py-3 bg-indigo-600 text-white font-bold rounded-xl shadow-lg hover:bg-indigo-700 transition duration-150">
+                        <span id="add-balance-submit-text">Catat Penambahan</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="add-cash-modal" class="modal-backdrop hidden">
+        <div class="bg-white p-8 rounded-xl shadow-2xl max-w-sm w-full">
+            <div class="flex justify-between items-center border-b pb-3 mb-4">
+                <h3 class="text-xl font-bold text-teal-600">➕ Tambah Cash Ditangan</h3>
+                <button id="cash-modal-close" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+            </div>
+            
+            <form id="add-cash-form">
+                <div class="form-group">
+                    <label for="add-cash-amount" class="form-label text-teal-600">Nominal Penambahan Cash</label>
+                    <input type="text" id="add-cash-amount" name="add-cash-amount" class="form-input text-teal-700 font-bold text-xl" 
+                        placeholder="Contoh: 500000" 
+                        oninput="this.value = this.value.replace(/[^0-9]/g, '');" required>
+                </div>
+
+                <div class="mt-8 pt-4 border-t flex justify-end">
+                    <button type="submit" id="add-cash-submit-btn" class="px-6 py-3 bg-teal-600 text-white font-bold rounded-xl shadow-lg hover:bg-teal-700 transition duration-150">
+                        <span id="add-cash-submit-text">Catat Penambahan Cash</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div id="add-buku-agen-modal" class="modal-backdrop hidden">
+        <div class="bg-white p-8 rounded-xl shadow-2xl max-w-sm w-full">
+            <div class="flex justify-between items-center border-b pb-3 mb-4">
+                <h3 class="text-xl font-bold text-amber-600">➕ Tambah Saldo Buku Agen</h3>
+                <button id="buku-agen-modal-close" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+            </div>
+            
+            <form id="add-buku-agen-form">
+                <div class="form-group">
+                    <label for="add-buku-agen-amount" class="form-label text-amber-600">Nominal Penambahan Saldo</label>
+                    <input type="text" id="add-buku-agen-amount" name="add-buku-agen-amount" class="form-input text-amber-700 font-bold text-xl" 
+                        placeholder="Contoh: 500000" 
+                        oninput="this.value = this.value.replace(/[^0-9]/g, '');" required>
+                </div>
+
+                <div class="mt-8 pt-4 border-t flex justify-end">
+                    <button type="submit" id="add-buku-agen-submit-btn" class="px-6 py-3 bg-amber-600 text-white font-bold rounded-xl shadow-lg hover:bg-amber-700 transition duration-150">
+                        <span id="add-buku-agen-submit-text">Catat Penambahan Saldo</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
 
     <div id="debt-modal" class="modal-backdrop hidden">
         <div class="bg-white p-8 rounded-xl shadow-2xl max-w-3xl w-full">
@@ -255,7 +400,7 @@
     <script>
         // =========================================================================
         // >>>>>>>>>>>>>>>> URL WEB APP GAS BARU ANDA <<<<<<<<<<<<<<<
-        const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwvNgT5TFgvKjyhmZvzUIjwLjFClqbT8KtlBYnPWy2j33iKXbQCD2KTUfqhNMvcJm2biQ/exec'; 
+        const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyuoo1eqACy17DBn06otD1ze2cyyRfZQHXQfM_8dyR2YVOYToC-z1XA4MvkdOgXUmb-jg/exec'; 
         // --------------------------------------------------------------------------------------------------
 
         // >>>>>>>>>>>>>>>> URL WEBSITE PEMBUAT STRUK <<<<<<<<<<<<<<<
@@ -266,6 +411,21 @@
         const REKAPAN_HARIAN_URL = 'https://dwiky106.github.io/rekapan'; 
         // --------------------------------------------------------------------------------------------------
 
+        // VARIABEL GLOBAL UNTUK TOTAL HUTANG KESELURUHAN
+        let currentTotalDebt = 0;
+        let isDebtVisible = true; 
+        
+        // VARIABEL GLOBAL UNTUK SALDO FLIP
+        let currentFlipBalance = 0;
+        let isBalanceVisible = true; 
+        
+        // VARIABEL GLOBAL UNTUK CASH DITANGAN 
+        let currentCashBalance = 0;
+        let isCashVisible = true; 
+        
+        // VARIABEL GLOBAL UNTUK SALDO BUKU AGEN (BARU)
+        let currentBukuAgenBalance = 0;
+        let isBukuAgenVisible = true; 
 
         const CHANNELS = {
             'Flip': {
@@ -289,7 +449,7 @@
 
         let currentChannel = '';
 
-        // --- DOM ELEMENTS ---
+        // --- DOM ELEMENTS (DEBT & GENERAL) ---
         let greetingEl;
         let formContainerEl;
         let formTitleSpanEl;
@@ -301,10 +461,56 @@
         let inputTimestampEl;
         let channelButtons;
         let urlErrorReminderEl;
-        
-        // --- ELEMEN TOMBOL TAMBAHAN ---
         let strukBtnEl; 
         let rekapanBtnEl; 
+        let totalDebtDisplayEl;
+        let toggleDebtBtnEl;
+        let eyeIconEl;
+        let refreshDebtBtnEl;
+
+        // --- FLIP BALANCE DASHBOARD ELEMENTS ---
+        let flipBalanceDisplayEl;
+        let toggleBalanceBtnEl;
+        let balanceEyeIconEl;
+        let addBalanceBtnEl;
+        
+        // --- CASH BALANCE DASHBOARD ELEMENTS ---
+        let cashBalanceDisplayEl;
+        let toggleCashBtnEl;
+        let cashEyeIconEl;
+        let addCashBtnEl;
+        
+        // --- BUKU AGEN BALANCE DASHBOARD ELEMENTS (BARU) ---
+        let bukuAgenBalanceDisplayEl;
+        let toggleBukuAgenBtnEl;
+        let bukuAgenEyeIconEl;
+        let addBukuAgenBtnEl;
+
+
+        // --- ADD BALANCE MODAL ELEMENTS ---
+        let addBalanceModalEl;
+        let balanceModalCloseEl;
+        let addBalanceFormEl;
+        let addBalanceAmountEl;
+        let addBalanceSubmitBtnEl;
+        let addBalanceSubmitTextEl;
+        
+        // --- ADD CASH MODAL ELEMENTS ---
+        let addCashModalEl;
+        let cashModalCloseEl;
+        let addCashFormEl;
+        let addCashAmountEl;
+        let addCashSubmitBtnEl;
+        let addCashSubmitTextEl;
+        
+        // --- ADD BUKU AGEN MODAL ELEMENTS (BARU) ---
+        let addBukuAgenModalEl;
+        let bukuAgenModalCloseEl;
+        let addBukuAgenFormEl;
+        let addBukuAgenAmountEl;
+        let addBukuAgenSubmitBtnEl;
+        let addBukuAgenSubmitTextEl;
+
 
         // --- DEBUG ELEMENTS ---
         let debugUrlEl;
@@ -371,6 +577,33 @@
                 partialSubmitTextEl.innerHTML = '<span class="spinner"></span> Memproses...';
             } else {
                 partialSubmitTextEl.innerHTML = 'Kirim Pembayaran';
+            }
+        }
+        
+        function setAddBalanceLoading(isLoading) {
+             addBalanceSubmitBtnEl.disabled = isLoading;
+            if (isLoading) {
+                addBalanceSubmitTextEl.innerHTML = '<span class="spinner"></span> Memproses...';
+            } else {
+                addBalanceSubmitTextEl.innerHTML = 'Catat Penambahan';
+            }
+        }
+
+        function setAddCashLoading(isLoading) {
+             addCashSubmitBtnEl.disabled = isLoading;
+            if (isLoading) {
+                addCashSubmitTextEl.innerHTML = '<span class="spinner"></span> Memproses...';
+            } else {
+                addCashSubmitTextEl.innerHTML = 'Catat Penambahan Cash';
+            }
+        }
+        
+        function setAddBukuAgenLoading(isLoading) { // <<< BARU
+             addBukuAgenSubmitBtnEl.disabled = isLoading;
+            if (isLoading) {
+                addBukuAgenSubmitTextEl.innerHTML = '<span class="spinner"></span> Memproses...';
+            } else {
+                addBukuAgenSubmitTextEl.innerHTML = 'Catat Penambahan Saldo';
             }
         }
 
@@ -448,7 +681,7 @@
 
         // --- RETRY MECHANISM ---
         async function fetchWithRetry(url, options, maxRetries = 3) {
-            // Cek URL Apps Script yang masih placeholder (URL yang baru diberikan sudah valid)
+            // Cek URL Apps Script yang masih placeholder 
             if (GAS_WEB_APP_URL.includes('AKfycbw') && GAS_WEB_APP_URL.length < 100) {
                  throw new Error("ERROR: URL Web App belum diatur atau masih placeholder.");
             }
@@ -475,6 +708,387 @@
                 }
             }
         }
+
+        // ============================
+        // LOGIKA TOTAL HUTANG DASHBOARD
+        // ============================
+        
+        async function fetchTotalDebt() {
+            totalDebtDisplayEl.innerHTML = `<span class="spinner"></span> Loading...`;
+            refreshDebtBtnEl.disabled = true;
+            
+            debugLastRequestEl.textContent = `GET: getTotalDebt`;
+
+            try {
+                const url = `${GAS_WEB_APP_URL}?action=getTotalDebt`;
+                const res = await fetchWithRetry(url, { method: 'GET' });
+                
+                let data;
+                try {
+                    data = await res.json();
+                } catch (e) {
+                     const rawText = await res.text();
+                     throw new Error(`Respon server bukan JSON (Total Debt Gagal). Respon mentah: ${rawText.substring(0, 200)}...`);
+                }
+
+                if (data.status !== "SUCCESS" || data.total === undefined) {
+                    throw new Error(data.error || "Gagal mendapatkan total hutang.");
+                }
+
+                currentTotalDebt = parseRupiahToNumber(data.total); 
+                updateDebtDisplay();
+                debugLastRequestEl.textContent = `SUCCESS: getTotalDebt`;
+            } catch (err) {
+                totalDebtDisplayEl.textContent = 'Gagal memuat!';
+                debugLastRequestEl.textContent = `FAILED: getTotalDebt (${err.message.substring(0, 50)}...)`;
+            } finally {
+                refreshDebtBtnEl.disabled = false;
+            }
+        }
+
+        function updateDebtDisplay() {
+            if (isDebtVisible) {
+                totalDebtDisplayEl.textContent = formatRupiah(currentTotalDebt);
+                eyeIconEl.textContent = '👁️';
+            } else {
+                totalDebtDisplayEl.textContent = '*****';
+                eyeIconEl.textContent = '🔒';
+            }
+        }
+
+        function toggleDebtVisibility() {
+            isDebtVisible = !isDebtVisible;
+            updateDebtDisplay();
+        }
+
+        // ============================
+        // LOGIKA SALDO FLIP
+        // ============================
+        
+        async function fetchFlipBalance() {
+            flipBalanceDisplayEl.innerHTML = `<span class="spinner"></span> Loading...`;
+            
+            debugLastRequestEl.textContent = `GET: getFlipBalance`;
+
+            try {
+                const url = `${GAS_WEB_APP_URL}?action=getFlipBalance`;
+                const res = await fetchWithRetry(url, { method: 'GET' });
+                
+                let data;
+                try {
+                    data = await res.json();
+                } catch (e) {
+                     const rawText = await res.text();
+                     throw new Error(`Respon server bukan JSON (Saldo Gagal). Respon mentah: ${rawText.substring(0, 200)}...`);
+                }
+
+                if (data.status !== "SUCCESS" || data.balance === undefined) {
+                    throw new Error(data.error || "Gagal mendapatkan Saldo Flip.");
+                }
+
+                currentFlipBalance = parseRupiahToNumber(data.balance); 
+                updateBalanceDisplay();
+                debugLastRequestEl.textContent = `SUCCESS: getFlipBalance`;
+            } catch (err) {
+                flipBalanceDisplayEl.textContent = 'Gagal memuat!';
+                debugLastRequestEl.textContent = `FAILED: getFlipBalance (${err.message.substring(0, 50)}...)`;
+            }
+        }
+
+        function updateBalanceDisplay() {
+            if (isBalanceVisible) {
+                flipBalanceDisplayEl.textContent = formatRupiah(currentFlipBalance);
+                balanceEyeIconEl.textContent = '👁️';
+            } else {
+                flipBalanceDisplayEl.textContent = '*****';
+                balanceEyeIconEl.textContent = '🔒';
+            }
+        }
+
+        function toggleBalanceVisibility() {
+            isBalanceVisible = !isBalanceVisible;
+            updateBalanceDisplay();
+        }
+        
+        // ============================
+        // LOGIKA CASH DITANGAN
+        // ============================
+        
+        async function fetchCashBalance() {
+            cashBalanceDisplayEl.innerHTML = `<span class="spinner"></span> Loading...`;
+            
+            debugLastRequestEl.textContent = `GET: getCashBalance`;
+
+            try {
+                const url = `${GAS_WEB_APP_URL}?action=getCashBalance`;
+                const res = await fetchWithRetry(url, { method: 'GET' });
+                
+                let data;
+                try {
+                    data = await res.json();
+                } catch (e) {
+                     const rawText = await res.text();
+                     throw new Error(`Respon server bukan JSON (Cash Gagal). Respon mentah: ${rawText.substring(0, 200)}...`);
+                }
+
+                if (data.status !== "SUCCESS" || data.balance === undefined) {
+                    throw new Error(data.error || "Gagal mendapatkan Cash Ditangan.");
+                }
+
+                currentCashBalance = parseRupiahToNumber(data.balance); 
+                updateCashDisplay();
+                debugLastRequestEl.textContent = `SUCCESS: getCashBalance`;
+            } catch (err) {
+                cashBalanceDisplayEl.textContent = 'Gagal memuat!';
+                debugLastRequestEl.textContent = `FAILED: getCashBalance (${err.message.substring(0, 50)}...)`;
+            }
+        }
+
+        function updateCashDisplay() {
+            if (isCashVisible) {
+                cashBalanceDisplayEl.textContent = formatRupiah(currentCashBalance);
+                cashEyeIconEl.textContent = '👁️';
+            } else {
+                cashBalanceDisplayEl.textContent = '*****';
+                cashEyeIconEl.textContent = '🔒';
+            }
+        }
+
+        function toggleCashVisibility() {
+            isCashVisible = !isCashVisible;
+            updateCashDisplay();
+        }
+
+        // ============================
+        // LOGIKA SALDO BUKU AGEN (BARU)
+        // ============================
+        
+        async function fetchBukuAgenBalance() {
+            bukuAgenBalanceDisplayEl.innerHTML = `<span class="spinner"></span> Loading...`;
+            
+            debugLastRequestEl.textContent = `GET: getBukuAgenBalance`;
+
+            try {
+                const url = `${GAS_WEB_APP_URL}?action=getBukuAgenBalance`;
+                const res = await fetchWithRetry(url, { method: 'GET' });
+                
+                let data;
+                try {
+                    data = await res.json();
+                } catch (e) {
+                     const rawText = await res.text();
+                     throw new Error(`Respon server bukan JSON (Saldo Buku Agen Gagal). Respon mentah: ${rawText.substring(0, 200)}...`);
+                }
+
+                if (data.status !== "SUCCESS" || data.balance === undefined) {
+                    throw new Error(data.error || "Gagal mendapatkan Saldo Buku Agen.");
+                }
+
+                currentBukuAgenBalance = parseRupiahToNumber(data.balance); 
+                updateBukuAgenDisplay();
+                debugLastRequestEl.textContent = `SUCCESS: getBukuAgenBalance`;
+            } catch (err) {
+                bukuAgenBalanceDisplayEl.textContent = 'Gagal memuat!';
+                debugLastRequestEl.textContent = `FAILED: getBukuAgenBalance (${err.message.substring(0, 50)}...)`;
+            }
+        }
+
+        function updateBukuAgenDisplay() {
+            if (isBukuAgenVisible) {
+                bukuAgenBalanceDisplayEl.textContent = formatRupiah(currentBukuAgenBalance);
+                bukuAgenEyeIconEl.textContent = '👁️';
+            } else {
+                bukuAgenBalanceDisplayEl.textContent = '*****';
+                bukuAgenEyeIconEl.textContent = '🔒';
+            }
+        }
+
+        function toggleBukuAgenVisibility() {
+            isBukuAgenVisible = !isBukuAgenVisible;
+            updateBukuAgenDisplay();
+        }
+
+
+        // ============================
+        // LOGIKA TAMBAH SALDO FLIP
+        // ============================
+
+        function openAddBalanceModal() {
+            addBalanceModalEl.classList.remove('hidden');
+            addBalanceAmountEl.value = ''; // Reset
+        }
+
+        function closeAddBalanceModal() {
+            addBalanceModalEl.classList.add('hidden');
+        }
+
+        async function handleAddBalance(e) {
+            e.preventDefault();
+            setAddBalanceLoading(true);
+
+            const amount = parseRupiahToNumber(addBalanceAmountEl.value);
+
+            if (amount <= 0) {
+                showModal('Input Tidak Valid', '<p class="text-yellow-600 font-semibold">Nominal penambahan harus lebih besar dari 0.</p>');
+                setAddBalanceLoading(false);
+                return;
+            }
+
+            try {
+                debugLastRequestEl.textContent = `POST: addFlipBalance (Nominal: ${amount})`;
+
+                const res = await fetchWithRetry(
+                    GAS_WEB_APP_URL,
+                    {
+                        method: "POST",
+                        body: new URLSearchParams({
+                            action: "addFlipBalance", 
+                            amount: amount 
+                        })
+                    }
+                );
+
+                const data = await res.json();
+                
+                if (data.status !== "SUCCESS")
+                    throw new Error(data.error || "Gagal menambah saldo. Cek balasan error dari Apps Script.");
+
+                closeAddBalanceModal();
+                showModal(
+                    "Sukses",
+                    `<p class='text-green-600 font-semibold'>Penambahan saldo Flip sebesar ${formatRupiah(amount)} berhasil dicatat.</p>`
+                );
+
+                // Muat ulang saldo setelah penambahan
+                await fetchFlipBalance();
+
+            } catch (err) {
+                showModal("Gagal", `<p class='text-red-600 font-semibold'>${err.message}</p>`, true);
+            } finally {
+                setAddBalanceLoading(false);
+            }
+        }
+        
+        // ============================
+        // LOGIKA TAMBAH CASH DITANGAN
+        // ============================
+        
+        function openAddCashModal() {
+            addCashModalEl.classList.remove('hidden');
+            addCashAmountEl.value = ''; // Reset
+        }
+
+        function closeAddCashModal() {
+            addCashModalEl.classList.add('hidden');
+        }
+
+        async function handleAddCash(e) {
+            e.preventDefault();
+            setAddCashLoading(true);
+
+            const amount = parseRupiahToNumber(addCashAmountEl.value);
+
+            if (amount <= 0) {
+                showModal('Input Tidak Valid', '<p class="text-yellow-600 font-semibold">Nominal penambahan cash harus lebih besar dari 0.</p>');
+                setAddCashLoading(false);
+                return;
+            }
+
+            try {
+                debugLastRequestEl.textContent = `POST: addCashBalance (Nominal: ${amount})`;
+
+                const res = await fetchWithRetry(
+                    GAS_WEB_APP_URL,
+                    {
+                        method: "POST",
+                        body: new URLSearchParams({
+                            action: "addCashBalance", 
+                            amount: amount 
+                        })
+                    }
+                );
+
+                const data = await res.json();
+                
+                if (data.status !== "SUCCESS")
+                    throw new Error(data.error || "Gagal menambah cash. Cek balasan error dari Apps Script.");
+
+                closeAddCashModal();
+                showModal(
+                    "Sukses",
+                    `<p class='text-green-600 font-semibold'>Penambahan Cash Ditangan sebesar ${formatRupiah(amount)} berhasil dicatat.</p>`
+                );
+
+                // Muat ulang saldo setelah penambahan
+                await fetchCashBalance();
+
+            } catch (err) {
+                showModal("Gagal", `<p class='text-red-600 font-semibold'>${err.message}</p>`, true);
+            } finally {
+                setAddCashLoading(false);
+            }
+        }
+
+        // ============================
+        // LOGIKA TAMBAH SALDO BUKU AGEN (BARU)
+        // ============================
+        
+        function openAddBukuAgenModal() {
+            addBukuAgenModalEl.classList.remove('hidden');
+            addBukuAgenAmountEl.value = ''; // Reset
+        }
+
+        function closeAddBukuAgenModal() {
+            addBukuAgenModalEl.classList.add('hidden');
+        }
+
+        async function handleAddBukuAgen(e) {
+            e.preventDefault();
+            setAddBukuAgenLoading(true);
+
+            const amount = parseRupiahToNumber(addBukuAgenAmountEl.value);
+
+            if (amount <= 0) {
+                showModal('Input Tidak Valid', '<p class="text-yellow-600 font-semibold">Nominal penambahan saldo Buku Agen harus lebih besar dari 0.</p>');
+                setAddBukuAgenLoading(false);
+                return;
+            }
+
+            try {
+                debugLastRequestEl.textContent = `POST: addBukuAgenBalance (Nominal: ${amount})`;
+
+                const res = await fetchWithRetry(
+                    GAS_WEB_APP_URL,
+                    {
+                        method: "POST",
+                        body: new URLSearchParams({
+                            action: "addBukuAgenBalance", 
+                            amount: amount 
+                        })
+                    }
+                );
+
+                const data = await res.json();
+                
+                if (data.status !== "SUCCESS")
+                    throw new Error(data.error || "Gagal menambah saldo Buku Agen. Cek balasan error dari Apps Script.");
+
+                closeAddBukuAgenModal();
+                showModal(
+                    "Sukses",
+                    `<p class='text-green-600 font-semibold'>Penambahan Saldo Buku Agen sebesar ${formatRupiah(amount)} berhasil dicatat.</p>`
+                );
+
+                // Muat ulang saldo setelah penambahan
+                await fetchBukuAgenBalance();
+
+            } catch (err) {
+                showModal("Gagal", `<p class='text-red-600 font-semibold'>${err.message}</p>`, true);
+            } finally {
+                setAddBukuAgenLoading(false);
+            }
+        }
+
 
         // --- FORM RENDERING & DYNAMICS ---
         function renderForm(channel) {
@@ -609,7 +1223,6 @@
             `;
             
             debugLastRequestEl.textContent = `GET: searchDebt (Identitas: ${ident}, Tanggal: ${date})`;
-            debugRawDataEl.textContent = 'N/A';
 
             try {
                 const url = `${GAS_WEB_APP_URL}?action=searchDebt&identitas=${encodeURIComponent(ident)}${date ? '&date=' + encodeURIComponent(date) : ''}`;
@@ -690,8 +1303,6 @@
                 button.innerHTML = '<span class="spinner"></span> Proses...';
 
                 debugLastRequestEl.textContent = `POST: updateDebt (ID: ${ctx.debtId}, Mode: Lunas)`;
-                debugRawDataEl.textContent = 'Mengirim...';
-
 
                 const res = await fetchWithRetry(
                     GAS_WEB_APP_URL,
@@ -725,8 +1336,9 @@
                     "<p class='text-green-600 font-semibold'>Hutang berhasil dihapus (set lunas) dan nominalnya dipindah ke Cash Diterima Agen.</p>"
                 );
 
-                // Setelah berhasil, muat ulang hasil pencarian hutang
+                // Setelah berhasil, muat ulang hasil pencarian hutang & Total Debt
                 await searchDebt();
+                await fetchTotalDebt();
 
             } catch (err) {
                 showModal("Gagal", `<p class='text-red-600 font-semibold'>${err.message}</p>`, true);
@@ -784,7 +1396,6 @@
 
             try {
                 debugLastRequestEl.textContent = `POST: updateDebt (ID: ${ctx.debtId}, Mode: Partial, Nominal: ${ctx.nominalBayar})`;
-                debugRawDataEl.textContent = 'Mengirim...';
 
                 const res = await fetchWithRetry(
                     GAS_WEB_APP_URL,
@@ -821,8 +1432,9 @@
                     `<p class='text-sm mt-2'>Sisa hutang terbaru akan terlihat setelah pencarian ulang.</p>`
                 );
 
-                // Muat ulang hasil pencarian hutang
+                // Muat ulang hasil pencarian hutang & Total Debt
                 await searchDebt();
+                await fetchTotalDebt();
 
             } catch (err) {
                 showModal("Gagal", `<p class='text-red-600 font-semibold'>${err.message}</p>`, true);
@@ -852,6 +1464,56 @@
             // --- Elemen Tombol Tambahan ---
             strukBtnEl = document.getElementById('struk-btn');
             rekapanBtnEl = document.getElementById('rekapan-btn');
+            
+            // --- DEBT DASHBOARD ELEMENTS ---
+            totalDebtDisplayEl = document.getElementById('total-debt-display');
+            toggleDebtBtnEl = document.getElementById('toggle-debt-btn');
+            eyeIconEl = document.getElementById('eye-icon');
+            refreshDebtBtnEl = document.getElementById('refresh-debt-btn');
+            
+            // --- FLIP BALANCE DASHBOARD ELEMENTS ---
+            flipBalanceDisplayEl = document.getElementById('flip-balance-display');
+            toggleBalanceBtnEl = document.getElementById('toggle-balance-btn');
+            balanceEyeIconEl = document.getElementById('balance-eye-icon');
+            addBalanceBtnEl = document.getElementById('add-balance-btn');
+            
+            // --- CASH BALANCE DASHBOARD ELEMENTS ---
+            cashBalanceDisplayEl = document.getElementById('cash-balance-display');
+            toggleCashBtnEl = document.getElementById('toggle-cash-btn');
+            cashEyeIconEl = document.getElementById('cash-eye-icon');
+            addCashBtnEl = document.getElementById('add-cash-btn');
+            
+            // --- BUKU AGEN BALANCE DASHBOARD ELEMENTS (BARU) ---
+            bukuAgenBalanceDisplayEl = document.getElementById('buku-agen-balance-display');
+            toggleBukuAgenBtnEl = document.getElementById('toggle-buku-agen-btn');
+            bukuAgenEyeIconEl = document.getElementById('buku-agen-eye-icon');
+            addBukuAgenBtnEl = document.getElementById('add-buku-agen-btn');
+
+
+            // --- ADD BALANCE MODAL ELEMENTS ---
+            addBalanceModalEl = document.getElementById('add-balance-modal');
+            balanceModalCloseEl = document.getElementById('balance-modal-close');
+            addBalanceFormEl = document.getElementById('add-balance-form');
+            addBalanceAmountEl = document.getElementById('add-balance-amount');
+            addBalanceSubmitBtnEl = document.getElementById('add-balance-submit-btn');
+            addBalanceSubmitTextEl = document.getElementById('add-balance-submit-text');
+            
+            // --- ADD CASH MODAL ELEMENTS ---
+            addCashModalEl = document.getElementById('add-cash-modal');
+            cashModalCloseEl = document.getElementById('cash-modal-close');
+            addCashFormEl = document.getElementById('add-cash-form');
+            addCashAmountEl = document.getElementById('add-cash-amount');
+            addCashSubmitBtnEl = document.getElementById('add-cash-submit-btn');
+            addCashSubmitTextEl = document.getElementById('add-cash-submit-text');
+            
+            // --- ADD BUKU AGEN MODAL ELEMENTS (BARU) ---
+            addBukuAgenModalEl = document.getElementById('add-buku-agen-modal');
+            bukuAgenModalCloseEl = document.getElementById('buku-agen-modal-close');
+            addBukuAgenFormEl = document.getElementById('add-buku-agen-form');
+            addBukuAgenAmountEl = document.getElementById('add-buku-agen-amount');
+            addBukuAgenSubmitBtnEl = document.getElementById('add-buku-agen-submit-btn');
+            addBukuAgenSubmitTextEl = document.getElementById('add-buku-agen-submit-text');
+
 
             // --- Debug, Modal, Debt, Partial Elements ---
             debugUrlEl = document.getElementById('debug-url');
@@ -889,6 +1551,41 @@
             modalCloseBtnEl.addEventListener('click', hideModal);
             modalCloseBtnFooterEl.addEventListener('click', hideModal); 
             
+            // Total Debt Listeners
+            toggleDebtBtnEl.addEventListener('click', toggleDebtVisibility);
+            refreshDebtBtnEl.addEventListener('click', async () => {
+                await fetchTotalDebt();
+                await fetchFlipBalance();
+                await fetchCashBalance(); 
+                await fetchBukuAgenBalance(); // Refresh Buku Agen
+            });
+            
+            // Flip Balance Listeners 
+            toggleBalanceBtnEl.addEventListener('click', toggleBalanceVisibility);
+            addBalanceBtnEl.addEventListener('click', openAddBalanceModal);
+            
+            // Cash Balance Listeners
+            toggleCashBtnEl.addEventListener('click', toggleCashVisibility);
+            addCashBtnEl.addEventListener('click', openAddCashModal);
+            
+            // Buku Agen Balance Listeners (BARU)
+            toggleBukuAgenBtnEl.addEventListener('click', toggleBukuAgenVisibility);
+            addBukuAgenBtnEl.addEventListener('click', openAddBukuAgenModal);
+
+
+            // Add Balance Modal Listeners 
+            balanceModalCloseEl.addEventListener('click', closeAddBalanceModal);
+            addBalanceFormEl.addEventListener('submit', handleAddBalance);
+            
+            // Add Cash Modal Listeners
+            cashModalCloseEl.addEventListener('click', closeAddCashModal);
+            addCashFormEl.addEventListener('submit', handleAddCash);
+            
+            // Add Buku Agen Modal Listeners (BARU)
+            bukuAgenModalCloseEl.addEventListener('click', closeAddBukuAgenModal);
+            addBukuAgenFormEl.addEventListener('submit', handleAddBukuAgen);
+
+
             // Form Submission Listener 
             transactionFormEl.addEventListener('submit', async function(e) {
                 e.preventDefault();
@@ -928,7 +1625,6 @@
                 formData.set('timestamp', timestamp);
                 
                 debugLastRequestEl.textContent = `POST: submitData (${currentChannel})`;
-                debugRawDataEl.textContent = 'Mengirim...';
 
 
                 try {
@@ -951,6 +1647,12 @@
                         channelButtons.forEach(btn => btn.classList.remove('active'));
                         urlErrorReminderEl.style.display = 'none';
                         debugLastRequestEl.textContent = `SUCCESS: submitData`;
+                        
+                        // REFRESH SEMUA DASHBOARD SETELAH SUBMIT DATA
+                        await fetchTotalDebt(); 
+                        await fetchFlipBalance();
+                        await fetchCashBalance(); 
+                        await fetchBukuAgenBalance(); // Refresh Buku Agen
 
                     } else {
                         // Jika status ERROR dari Apps Script
@@ -1033,6 +1735,12 @@
             
             // Tampilkan URL Apps Script di debug panel saat inisialisasi
             debugUrlEl.textContent = GAS_WEB_APP_URL;
+
+            // Panggil fungsi untuk memuat semua saldo dan hutang saat halaman dimuat
+            fetchTotalDebt();
+            fetchFlipBalance();
+            fetchCashBalance(); 
+            fetchBukuAgenBalance(); // <<< BARU
 
             // Tampilkan pengingat jika URL Apps Script terlihat seperti placeholder atau bermasalah
             if (GAS_WEB_APP_URL.includes('AKfycbw') && GAS_WEB_APP_URL.length < 100) {
