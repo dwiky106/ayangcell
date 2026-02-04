@@ -620,15 +620,15 @@
 
         function getGreeting() {
             const hour = new Date().getHours();
-            let greeting = 'Selamat ';
+            let greeting = 'Hai ';
             if (hour >= 4 && hour < 10) {
-                greeting += 'Pagi'; 
+                greeting += 'Punel ku'; 
             } else if (hour >= 10 && hour < 15) {
-                greeting += 'Siang'; 
+                greeting += 'Punel ku'; 
             } else if (hour >= 15 && hour < 18) {
-                greeting += 'Sore'; 
+                greeting += 'Punel ku'; 
             } else {
-                greeting += 'Malam'; 
+                greeting += 'Punel ku'; 
             }
             if (greetingEl) {
                 greetingEl.textContent = `${greeting} ,Selamat Datang di Bulan Februari💝`;
